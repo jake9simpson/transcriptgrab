@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 4 of 7 (History List)
-Plan: 1 of 2 in current phase
-Status: Plan 04-01 complete, ready for Plan 04-02
-Last activity: 2026-02-18 -- Plan 04-01 history list page complete
+Phase: 4 of 7 (History List) -- COMPLETE
+Plan: 2 of 2 in current phase (all plans complete)
+Status: Phase 04 complete, ready for Phase 05
+Last activity: 2026-02-18 -- Plan 04-02 transcript detail page complete
 
-Progress: [███████░░░] ~50%
+Progress: [████████░░] ~57%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7
-- Average duration: 8 min
-- Total execution time: 0.9 hours
+- Total plans completed: 8
+- Average duration: 7 min
+- Total execution time: 1.0 hours
 
 **By Phase:**
 
@@ -34,10 +34,11 @@ Progress: [███████░░░] ~50%
 | 03    | P01  | 2 min    | 2     | 7     |
 | 03    | P02  | 2 min    | 2     | 6     |
 | 04    | P01  | 2 min    | 2     | 5     |
+| 04    | P02  | 1 min    | 1     | 1     |
 
 **Recent Trend:**
-- Last 5 plans: 2min, 40min, 2min, 2min, 2min
-- Trend: Consistent fast execution, Phase 04 continuing pattern
+- Last 5 plans: 40min, 2min, 2min, 2min, 1min
+- Trend: Consistent fast execution, Phase 04 complete
 
 *Updated after each plan completion*
 
@@ -69,6 +70,7 @@ Recent decisions affecting current work:
 - [Phase 03]: SaveTranscript uses window.location.href for history link — simpler than useRouter in renderless component
 - [Phase 04]: Full row select including segments for MVP — optimize with column selection later if needed
 - [Phase 04]: HistoryCard as client component — enables hover states and future interactivity
+- [Phase 04]: TranscriptSegment[] type assertion on JSONB segments column for runtime safety
 
 ### Pending Todos
 
@@ -81,5 +83,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 04-01-PLAN.md
-Resume file: .planning/phases/04-history-list/04-01-SUMMARY.md
+Stopped at: Completed 04-02-PLAN.md (Phase 04 complete)
+Resume file: .planning/phases/04-history-list/04-02-SUMMARY.md

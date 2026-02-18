@@ -14,8 +14,8 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Auth Foundation** - Google OAuth sign-in, session management, protected routes
 - [x] **Phase 2: Database Infrastructure** - Neon Postgres setup, schema, migrations, Auth.js adapter
-- [ ] **Phase 3: Transcript Persistence** - Auto-save transcripts, unauthenticated access preservation
-- [ ] **Phase 4: History List** - Transcript library with cards, thumbnails, navigation
+- [x] **Phase 3: Transcript Persistence** - Auto-save transcripts, unauthenticated access preservation
+- [x] **Phase 4: History List** - Transcript library with cards, thumbnails, navigation
 - [ ] **Phase 5: History Actions** - Copy, delete, and bulk operations on saved transcripts
 - [ ] **Phase 6: Advanced History** - Search, format switching, timestamp toggle
 - [ ] **Phase 7: Duplicate Detection & Polish** - Prevent duplicate saves, refinement
@@ -48,7 +48,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. Connection pooling configured to prevent exhaustion errors
 **Plans**: 2 plans
 - [x] 02-01-PLAN.md -- Drizzle ORM setup, schema (users, accounts, transcripts), DB client, migration config
-- [ ] 02-02-PLAN.md -- Wire Auth.js DrizzleAdapter, generate migration, provision Neon database
+- [x] 02-02-PLAN.md -- Wire Auth.js DrizzleAdapter, generate migration, provision Neon database
 
 ### Phase 3: Transcript Persistence
 **Goal**: Signed-in users automatically save transcripts; unauthenticated users still work
@@ -62,7 +62,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   5. Save operation completes without blocking transcript display
 **Plans**: 2 plans
 - [x] 03-01-PLAN.md -- Backend persistence: schema migration (videoDuration), save query, save API endpoint, duration extraction
-- [ ] 03-02-PLAN.md -- Frontend integration: Sonner toasts, SaveTranscript auto-save component, SignInNudge banner, page wiring
+- [x] 03-02-PLAN.md -- Frontend integration: Sonner toasts, SaveTranscript auto-save component, SignInNudge banner, page wiring
 
 ### Phase 4: History List
 **Goal**: Users can view all their saved transcripts in a browsable library
@@ -75,8 +75,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User can click a card and view the full saved transcript
   5. Navigation exists between main transcript tool and history page
 **Plans**: 2 plans
-- [ ] 04-01-PLAN.md -- History list page with cards, query functions, and navigation
-- [ ] 04-02-PLAN.md -- Transcript detail page at /history/[id]
+- [x] 04-01-PLAN.md -- History list page with cards, query functions, and navigation
+- [x] 04-02-PLAN.md -- Transcript detail page at /history/[id]
 
 ### Phase 5: History Actions
 **Goal**: Users can copy, delete, and bulk-manage transcripts from history
@@ -122,8 +122,8 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Auth Foundation | 2/2 | Complete | 2026-02-18 |
 | 2. Database Infrastructure | 2/2 | Complete | 2026-02-18 |
-| 3. Transcript Persistence | 1/2 | In progress | - |
-| 4. History List | 0/TBD | Not started | - |
+| 3. Transcript Persistence | 2/2 | Complete | 2026-02-18 |
+| 4. History List | 2/2 | Complete | 2026-02-18 |
 | 5. History Actions | 0/TBD | Not started | - |
 | 6. Advanced History | 0/TBD | Not started | - |
 | 7. Duplicate Detection & Polish | 0/TBD | Not started | - |

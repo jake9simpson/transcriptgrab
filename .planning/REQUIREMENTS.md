@@ -27,7 +27,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **HIST-01**: Signed-in user can view all saved transcripts on a dedicated history page
 - [x] **HIST-02**: History displays as cards with video title, thumbnail, save date, and text preview
 - [x] **HIST-03**: Cards sorted by most recent first
-- [ ] **HIST-04**: User can click a card to view the full transcript
+- [x] **HIST-04**: User can click a card to view the full transcript
 - [ ] **HIST-05**: User can one-click copy full transcript text from history
 - [ ] **HIST-06**: User can delete individual transcripts from history
 - [ ] **HIST-07**: User can bulk-select and delete multiple transcripts
@@ -91,7 +91,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HIST-01 | Phase 4 | Complete |
 | HIST-02 | Phase 4 | Complete |
 | HIST-03 | Phase 4 | Complete |
-| HIST-04 | Phase 4 | Pending |
+| HIST-04 | Phase 4 | Complete |
 | HIST-05 | Phase 5 | Pending |
 | HIST-06 | Phase 5 | Pending |
 | HIST-07 | Phase 5 | Pending |
