@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-17)
 
 **Core value:** Users can always find their previous transcripts without regenerating them
-**Current focus:** Phase 5: History Actions
+**Current focus:** Phase 6: Advanced History
 
 ## Current Position
 
-Phase: 5 of 7 (History Actions) -- COMPLETE
+Phase: 6 of 7 (Advanced History) -- COMPLETE
 Plan: 2 of 2 in current phase (all plans complete)
-Status: Phase 05 complete, ready for Phase 06
-Last activity: 2026-02-18 -- Plan 05-02 bulk select and delete complete
+Status: Phase 06 complete, ready for Phase 07
+Last activity: 2026-02-18 -- Plan 06-02 format switching and transcript export complete
 
-Progress: [██████████░] ~71%
+Progress: [████████████░] ~86%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 10
-- Average duration: 6 min
-- Total execution time: 1.0 hours
+- Total plans completed: 12
+- Average duration: 5 min
+- Total execution time: 1.1 hours
 
 **By Phase:**
 
@@ -37,9 +37,11 @@ Progress: [██████████░] ~71%
 | 04    | P02  | 1 min    | 1     | 1     |
 | 05    | P01  | 2 min    | 2     | 6     |
 | 05    | P02  | 2 min    | 2     | 4     |
+| 06    | P01  | 2 min    | 2     | 3     |
+| 06    | P02  | 2 min    | 2     | 3     |
 
 **Recent Trend:**
-- Last 5 plans: 2min, 2min, 1min, 2min, 2min
+- Last 5 plans: 1min, 2min, 2min, 2min, 2min
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -78,6 +80,9 @@ Recent decisions affecting current work:
 - [Phase 05]: Copy writes plain text (no timestamps) for maximum paste compatibility
 - [Phase 05]: Exported HistoryTranscript interface from HistoryCard for shared usage
 - [Phase 05]: Set<string> for selection state for O(1) toggle/has operations
+- [Phase 06]: Shared download utility in lib/download.ts rather than modifying ActionButtons.tsx to avoid regressions
+- [Phase 06]: TranscriptDetail wrapper owns all interactive state as a single client boundary
+- [Phase 06]: SRT format affects copy/download only; viewer shows plain or timestamped text
 
 ### Pending Todos
 
@@ -90,5 +95,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 05-02-PLAN.md (Phase 05 complete)
-Resume file: .planning/phases/05-history-actions/05-02-SUMMARY.md
+Stopped at: Completed 06-02-PLAN.md (Phase 06 complete)
+Resume file: .planning/phases/06-advanced-history/06-02-SUMMARY.md
