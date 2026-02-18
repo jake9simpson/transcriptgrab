@@ -13,7 +13,7 @@ This milestone transforms TranscriptGrab from a stateless transcript tool into a
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Auth Foundation** - Google OAuth sign-in, session management, protected routes
-- [ ] **Phase 2: Database Infrastructure** - Vercel Postgres setup, schema, migrations, connection pooling
+- [x] **Phase 2: Database Infrastructure** - Neon Postgres setup, schema, migrations, Auth.js adapter
 - [ ] **Phase 3: Transcript Persistence** - Auto-save transcripts, unauthenticated access preservation
 - [ ] **Phase 4: History List** - Transcript library with cards, thumbnails, navigation
 - [ ] **Phase 5: History Actions** - Copy, delete, and bulk operations on saved transcripts
@@ -117,7 +117,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Auth Foundation | 2/2 | Complete | 2026-02-18 |
-| 2. Database Infrastructure | 1/2 | In Progress | - |
+| 2. Database Infrastructure | 2/2 | Complete | 2026-02-18 |
 | 3. Transcript Persistence | 0/TBD | Not started | - |
 | 4. History List | 0/TBD | Not started | - |
 | 5. History Actions | 0/TBD | Not started | - |

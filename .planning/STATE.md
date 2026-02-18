@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 2 of 7 (Database Infrastructure)
-Plan: 1 of 2 in current phase
-Status: Plan 01 complete, Plan 02 next
-Last activity: 2026-02-18 — Plan 02-01 executed (schema & tooling)
+Plan: 2 of 2 in current phase
+Status: Phase 02 complete
+Last activity: 2026-02-18 — Plan 02-02 executed (adapter integration)
 
-Progress: [███░░░░░░░] ~21%
+Progress: [████░░░░░░] ~28%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3
-- Average duration: 3 min
-- Total execution time: 0.17 hours
+- Total plans completed: 4
+- Average duration: 12.5 min
+- Total execution time: 0.83 hours
 
 **By Phase:**
 
@@ -30,10 +30,11 @@ Progress: [███░░░░░░░] ~21%
 | 01    | P01  | 5 min    | 2     | 9     |
 | 01    | P02  | 3 min    | 3     | 5     |
 | 02    | P01  | 2 min    | 2     | 5     |
+| 02    | P02  | 40 min   | 2     | 3     |
 
 **Recent Trend:**
-- Last 5 plans: 5min, 3min, 2min
-- Trend: Consistent fast execution
+- Last 5 plans: 5min, 3min, 2min, 40min
+- Trend: Plan 02-02 included human checkpoint for database provisioning
 
 *Updated after each plan completion*
 
@@ -57,6 +58,8 @@ Recent decisions affecting current work:
 - [Phase 02]: Separate pooled (app) vs unpooled (migrations) DATABASE_URL endpoints
 - [Phase 02]: Unique index on userId+videoId for duplicate transcript detection
 - [Phase 02]: Text PKs with crypto.randomUUID() matching Auth.js adapter expectations
+- [Phase 02]: Explicit JWT strategy with adapter — Auth.js defaults to DB sessions when adapter present, explicit override preserves cookie sessions
+- [Phase 02]: DrizzleAdapter custom table config — usersTable/accountsTable point to schema, no sessions/verificationToken tables needed
 
 ### Pending Todos
 
@@ -69,5 +72,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 02-01-PLAN.md (schema & tooling)
-Resume file: .planning/phases/02-database-infrastructure/02-01-SUMMARY.md
+Stopped at: Completed 02-02-PLAN.md (adapter integration) — Phase 02 complete
+Resume file: .planning/phases/02-database-infrastructure/02-02-SUMMARY.md
