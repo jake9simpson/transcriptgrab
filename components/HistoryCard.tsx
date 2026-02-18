@@ -1,9 +1,25 @@
 "use client";
 
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { Copy, Trash2, Check } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import { decodeHtmlEntities, formatTimestamp } from "@/lib/format";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { decodeHtmlEntities, formatTimestamp, formatTranscriptText } from "@/lib/format";
 import type { TranscriptSegment } from "@/lib/types";
 
 interface HistoryTranscript {
@@ -38,6 +54,42 @@ export default function HistoryCard({
 }: {
   transcript: HistoryTranscript;
 }) {
+  const [copied, setCopied] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const router = useRouter();
+
+  function handleCopy(e: React.MouseEvent) {
+    e.stopPropagation();
+    e.preventDefault();
+    const text = formatTranscriptText(transcript.segments, false);
+    navigator.clipboard.writeText(text).then(() => {
+      toast("Copied to clipboard");
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
+
+  async function handleDelete() {
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/transcript/delete", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [transcript.id] }),
+      });
+      if (res.ok) {
+        toast("Transcript deleted");
+        router.refresh();
+      } else {
+        toast("Failed to delete transcript");
+      }
+    } catch {
+      toast("Failed to delete transcript");
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   return (
     <Link href={`/history/${transcript.id}`}>
       <Card className="hover:bg-accent/50 transition-colors py-4">
@@ -59,13 +111,59 @@ export default function HistoryCard({
             <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
               {getTextPreview(transcript.segments)}
             </p>
-            <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-              <span>{formatDate(transcript.savedAt)}</span>
-              {transcript.videoDuration != null && (
-                <span className="rounded bg-muted px-1.5 py-0.5">
-                  {formatTimestamp(transcript.videoDuration)}
-                </span>
-              )}
+            <div className="mt-2 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                <span>{formatDate(transcript.savedAt)}</span>
+                {transcript.videoDuration != null && (
+                  <span className="rounded bg-muted px-1.5 py-0.5">
+                    {formatTimestamp(transcript.videoDuration)}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleCopy}
+                >
+                  {copied ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <Copy className="h-4 w-4" />
+                  )}
+                </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Delete transcript?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This will permanently remove this transcript from your
+                        history. This action cannot be undone.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        disabled={deleting}
+                      >
+                        {deleting ? "Deleting..." : "Delete"}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
             </div>
           </div>
         </CardContent>

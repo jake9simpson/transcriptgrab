@@ -2,6 +2,7 @@ import { auth } from "@/auth";
 import { redirect, notFound } from "next/navigation";
 import { getTranscriptById } from "@/lib/db/queries";
 import TranscriptViewer from "@/components/TranscriptViewer";
+import TranscriptDetailActions from "@/components/TranscriptDetailActions";
 import Image from "next/image";
 import Link from "next/link";
 import { formatTimestamp } from "@/lib/format";
@@ -66,6 +67,8 @@ export default async function TranscriptDetailPage({
           </p>
         </div>
       </div>
+
+      <TranscriptDetailActions transcriptId={transcript.id} segments={segments} />
 
       <TranscriptViewer segments={segments} showTimestamps={true} />
     </div>
