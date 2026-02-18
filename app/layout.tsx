@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import ThemeToggle from "@/components/ThemeToggle";
 import AuthButton from "@/components/AuthButton";
 import Providers from "@/components/Providers";
@@ -28,7 +29,9 @@ export default function RootLayout({
         <Providers>
           <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-              <span className="text-lg font-semibold tracking-tight">TranscriptGrab</span>
+              <Link href="/" className="text-lg font-semibold tracking-tight">
+                TranscriptGrab
+              </Link>
               <div className="flex items-center gap-2">
                 <AuthButton />
                 <ThemeToggle />
