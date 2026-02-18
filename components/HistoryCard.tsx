@@ -92,7 +92,7 @@ export default function HistoryCard({
 
   return (
     <Link href={`/history/${transcript.id}`}>
-      <Card className="hover:bg-accent/50 transition-colors py-4">
+      <Card className="group hover:bg-accent/50 transition-colors py-4">
         <CardContent className="flex items-start gap-4">
           {transcript.thumbnailUrl ? (
             <Image
@@ -107,11 +107,11 @@ export default function HistoryCard({
             <div className="shrink-0 rounded-md bg-muted" style={{ width: 160, height: 90 }} />
           )}
           <div className="min-w-0 flex-1">
-            <h3 className="font-semibold line-clamp-1">{transcript.videoTitle}</h3>
+            <h3 className="font-semibold line-clamp-1 text-foreground group-hover:text-foreground/90 transition-colors">{transcript.videoTitle}</h3>
             <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
               {getTextPreview(transcript.segments)}
             </p>
-            <div className="mt-2 flex items-center justify-between">
+            <div className="mt-2 flex items-center justify-between border-t border-border/50 pt-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>{formatDate(transcript.savedAt)}</span>
                 {transcript.videoDuration != null && (
