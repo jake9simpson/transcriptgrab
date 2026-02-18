@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2, CheckSquare, X } from "lucide-react";
+import { Trash2, CheckSquare, X, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -28,7 +29,18 @@ export default function HistoryActions({
   const [selectionMode, setSelectionMode] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [deleting, setDeleting] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const router = useRouter();
+
+  const filteredTranscripts = useMemo(() => {
+    if (!searchTerm.trim()) return transcripts;
+    const term = searchTerm.toLowerCase();
+    return transcripts.filter(
+      (t) =>
+        t.videoTitle.toLowerCase().includes(term) ||
+        t.videoUrl.toLowerCase().includes(term)
+    );
+  }, [transcripts, searchTerm]);
 
   function enterSelectionMode() {
     setSelectionMode(true);
@@ -53,7 +65,7 @@ export default function HistoryActions({
   }
 
   function selectAll() {
-    setSelected(new Set(transcripts.map((t) => t.id)));
+    setSelected(new Set(filteredTranscripts.map((t) => t.id)));
   }
 
   function deselectAll() {
@@ -85,6 +97,15 @@ export default function HistoryActions({
 
   return (
     <div className="flex flex-col gap-3">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          placeholder="Search transcripts..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="pl-9"
+        />
+      </div>
       <div className="flex items-center justify-between">
         {selectionMode ? (
           <div className="flex items-center gap-2">
@@ -148,22 +169,36 @@ export default function HistoryActions({
         )}
       </div>
 
-      {transcripts.map((t) => (
-        <div key={t.id} className="flex items-start gap-3">
-          {selectionMode && (
-            <Checkbox
-              checked={selected.has(t.id)}
-              onCheckedChange={(checked) =>
-                toggleSelection(t.id, Boolean(checked))
-              }
-              className="mt-5"
-            />
-          )}
-          <div className="flex-1 min-w-0">
-            <HistoryCard transcript={t} />
-          </div>
+      {filteredTranscripts.length === 0 && searchTerm.trim() ? (
+        <div className="flex flex-col items-center justify-center gap-2 py-16 text-center">
+          <p className="text-muted-foreground">
+            No transcripts match &ldquo;{searchTerm}&rdquo;
+          </p>
+          <button
+            onClick={() => setSearchTerm("")}
+            className="text-sm text-primary underline underline-offset-4"
+          >
+            Clear search
+          </button>
         </div>
-      ))}
+      ) : (
+        filteredTranscripts.map((t) => (
+          <div key={t.id} className="flex items-start gap-3">
+            {selectionMode && (
+              <Checkbox
+                checked={selected.has(t.id)}
+                onCheckedChange={(checked) =>
+                  toggleSelection(t.id, Boolean(checked))
+                }
+                className="mt-5"
+              />
+            )}
+            <div className="flex-1 min-w-0">
+              <HistoryCard transcript={t} />
+            </div>
+          </div>
+        ))
+      )}
     </div>
   );
 }
