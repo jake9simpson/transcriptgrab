@@ -41,6 +41,16 @@ export async function getTranscriptById(id: string, userId: string) {
   return rows[0] ?? null;
 }
 
+export async function getTranscriptByVideoId(userId: string, videoId: string) {
+  const rows = await db
+    .select({ id: transcripts.id, savedAt: transcripts.savedAt })
+    .from(transcripts)
+    .where(and(eq(transcripts.userId, userId), eq(transcripts.videoId, videoId)))
+    .limit(1);
+
+  return rows[0] ?? null;
+}
+
 export async function deleteTranscripts(
   ids: string[],
   userId: string
