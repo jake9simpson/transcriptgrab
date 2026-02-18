@@ -102,7 +102,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User can export any saved transcript in plain text, timestamps, or SRT format
   4. User can switch between formats for same transcript without re-fetching from YouTube
   5. User can toggle timestamp visibility on transcript viewer
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 06-01-PLAN.md -- Search filtering on history page with card polish
+- [ ] 06-02-PLAN.md -- Format switching, timestamp toggle, and export on detail page
 
 ### Phase 7: Duplicate Detection & Polish
 **Goal**: Prevent duplicate saves and refine edge cases
@@ -126,6 +128,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. Database Infrastructure | 2/2 | Complete | 2026-02-18 |
 | 3. Transcript Persistence | 2/2 | Complete | 2026-02-18 |
 | 4. History List | 2/2 | Complete    | 2026-02-18 |
-| 5. History Actions | 1/2 | In progress | - |
-| 6. Advanced History | 0/TBD | Not started | - |
+| 5. History Actions | 2/2 | Complete | 2026-02-18 |
+| 6. Advanced History | 0/2 | Not started | - |
 | 7. Duplicate Detection & Polish | 0/TBD | Not started | - |
