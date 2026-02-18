@@ -32,7 +32,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. User stays signed in across browser sessions and page refreshes
   4. User can sign out from any page and sees sign-in prompt again
   5. Protected routes (like /history) redirect unauthenticated users
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 01-01-PLAN.md -- Auth.js v5 infrastructure (config, route handler, proxy, SessionProvider)
+- [ ] 01-02-PLAN.md -- Auth UI (sign-in button, avatar dropdown, sign-in hint, protected /history)
 
 ### Phase 2: Database Infrastructure
 **Goal**: Database and schema ready to store user transcripts
@@ -112,7 +114,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth Foundation | 0/TBD | Not started | - |
+| 1. Auth Foundation | 0/2 | Planned | - |
 | 2. Database Infrastructure | 0/TBD | Not started | - |
 | 3. Transcript Persistence | 0/TBD | Not started | - |
 | 4. History List | 0/TBD | Not started | - |
