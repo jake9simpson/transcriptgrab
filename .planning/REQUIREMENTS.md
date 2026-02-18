@@ -16,11 +16,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Transcript Persistence
 
-- [ ] **PERS-01**: Transcript auto-saved to database when signed-in user generates one
-- [ ] **PERS-02**: Stored data includes full transcript text, timestamps, video title, video URL, thumbnail URL, and save date
+- [x] **PERS-01**: Transcript auto-saved to database when signed-in user generates one
+- [x] **PERS-02**: Stored data includes full transcript text, timestamps, video title, video URL, thumbnail URL, and save date
 - [ ] **PERS-03**: Unauthenticated users can still generate and copy transcripts without signing in
 - [ ] **PERS-04**: Duplicate detection warns or prevents saving the same video transcript twice
-- [ ] **PERS-05**: No artificial limits on number of saved transcripts
+- [x] **PERS-05**: No artificial limits on number of saved transcripts
 
 ### History Page
 
@@ -83,11 +83,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | AUTH-02 | Phase 1 | Complete |
 | AUTH-03 | Phase 1 | Complete |
 | AUTH-04 | Phase 1 | Complete |
-| PERS-01 | Phase 3 | Pending |
-| PERS-02 | Phase 3 | Pending |
+| PERS-01 | Phase 3 | Complete |
+| PERS-02 | Phase 3 | Complete |
 | PERS-03 | Phase 3 | Pending |
 | PERS-04 | Phase 7 | Pending |
-| PERS-05 | Phase 3 | Pending |
+| PERS-05 | Phase 3 | Complete |
 | HIST-01 | Phase 4 | Pending |
 | HIST-02 | Phase 4 | Pending |
 | HIST-03 | Phase 4 | Pending |

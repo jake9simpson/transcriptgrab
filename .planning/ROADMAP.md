@@ -61,7 +61,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User can save unlimited transcripts without hitting artificial storage limits
   5. Save operation completes without blocking transcript display
 **Plans**: 2 plans
-- [ ] 03-01-PLAN.md -- Backend persistence: schema migration (videoDuration), save query, save API endpoint, duration extraction
+- [x] 03-01-PLAN.md -- Backend persistence: schema migration (videoDuration), save query, save API endpoint, duration extraction
 - [ ] 03-02-PLAN.md -- Frontend integration: Sonner toasts, SaveTranscript auto-save component, SignInNudge banner, page wiring
 
 ### Phase 4: History List
@@ -120,7 +120,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 |-------|----------------|--------|-----------|
 | 1. Auth Foundation | 2/2 | Complete | 2026-02-18 |
 | 2. Database Infrastructure | 2/2 | Complete | 2026-02-18 |
-| 3. Transcript Persistence | 0/2 | In progress | - |
+| 3. Transcript Persistence | 1/2 | In progress | - |
 | 4. History List | 0/TBD | Not started | - |
 | 5. History Actions | 0/TBD | Not started | - |
 | 6. Advanced History | 0/TBD | Not started | - |
