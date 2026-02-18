@@ -16,7 +16,8 @@ import TimestampToggle from '@/components/TimestampToggle';
 import LanguageSelector from '@/components/LanguageSelector';
 import ActionButtons from '@/components/ActionButtons';
 import TranscriptViewer from '@/components/TranscriptViewer';
-import SignInHint from '@/components/SignInHint';
+import SaveTranscript from '@/components/SaveTranscript';
+import SignInNudge from '@/components/SignInNudge';
 
 export default function Home() {
   const [url, setUrl] = useState('');
@@ -27,6 +28,8 @@ export default function Home() {
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [metadata, setMetadata] = useState<VideoMetadata | null>(null);
   const [showTimestamps, setShowTimestamps] = useState(true);
+  const [videoId, setVideoId] = useState('');
+  const [videoDuration, setVideoDuration] = useState<number | null>(null);
 
   async function handleSubmit(inputUrl: string) {
     setUrl(inputUrl);
@@ -58,6 +61,8 @@ export default function Home() {
 
       setSegments(transcriptData.data.segments);
       setAvailableTracks(transcriptData.data.availableTracks);
+      setVideoId(transcriptData.data.videoId);
+      setVideoDuration(transcriptData.data.videoDuration ?? null);
 
       // Default to first non-auto track, or first track
       const nonAutoTrack = transcriptData.data.availableTracks.find(
@@ -131,6 +136,14 @@ export default function Home() {
 
       {appState === 'success' && (
         <>
+          <SaveTranscript
+            videoId={videoId}
+            videoUrl={url}
+            videoTitle={metadata?.title ?? "Untitled"}
+            thumbnailUrl={metadata?.thumbnailUrl ?? null}
+            videoDuration={videoDuration}
+            segments={segments}
+          />
           {metadata && <VideoInfo metadata={metadata} />}
 
           <div className="flex items-center justify-between gap-4">
@@ -155,10 +168,10 @@ export default function Home() {
             segments={segments}
             showTimestamps={showTimestamps}
           />
+
+          <SignInNudge />
         </>
       )}
-
-      <SignInHint />
     </div>
   );
 }
