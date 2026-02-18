@@ -2,103 +2,33 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-02-17)
+See: .planning/PROJECT.md (updated 2026-02-18)
 
 **Core value:** Users can always find their previous transcripts without regenerating them
-**Current focus:** Phase 7: Duplicate Detection Polish -- COMPLETE
+**Current focus:** v1.0 shipped. Planning next milestone.
 
 ## Current Position
 
-Phase: 7 of 7 (Duplicate Detection Polish) -- COMPLETE
-Plan: 1 of 1 in current phase (all plans complete)
-Status: All phases complete. v1.0 feature-complete.
-Last activity: 2026-02-18 -- Plan 07-01 duplicate detection and warning complete
-
-Progress: [█████████████] 100%
-
-## Performance Metrics
-
-**Velocity:**
-- Total plans completed: 13
-- Average duration: 5 min
-- Total execution time: 1.1 hours
-
-**By Phase:**
-
-| Phase | Plan | Duration | Tasks | Files |
-|-------|------|----------|-------|-------|
-| 01    | P01  | 5 min    | 2     | 9     |
-| 01    | P02  | 3 min    | 3     | 5     |
-| 02    | P01  | 2 min    | 2     | 5     |
-| 02    | P02  | 40 min   | 2     | 3     |
-| 03    | P01  | 2 min    | 2     | 7     |
-| 03    | P02  | 2 min    | 2     | 6     |
-| 04    | P01  | 2 min    | 2     | 5     |
-| 04    | P02  | 1 min    | 1     | 1     |
-| 05    | P01  | 2 min    | 2     | 6     |
-| 05    | P02  | 2 min    | 2     | 4     |
-| 06    | P01  | 2 min    | 2     | 3     |
-| 06    | P02  | 2 min    | 2     | 3     |
-| 07    | P01  | 2 min    | 2     | 4     |
-
-**Recent Trend:**
-- Last 5 plans: 2min, 2min, 2min, 2min, 2min
-- Trend: Consistent fast execution
-
-*Updated after each plan completion*
+Milestone: v1.0 Auth & User History — SHIPPED 2026-02-18
+Status: Milestone complete. All 7 phases, 13 plans, 23 requirements satisfied.
+Last activity: 2026-02-18 — Milestone archived
 
 ## Accumulated Context
 
 ### Decisions
 
-Decisions are logged in PROJECT.md Key Decisions table.
-Recent decisions affecting current work:
-
-- Google OAuth only (no email/password) — Simplicity, no password management needed
-- Vercel Postgres for storage — Native Vercel integration, zero config
-- Auto-save transcripts (no save button) — Frictionless UX, users expect it to just work
-- Open access for unauthenticated users — No friction for new users, auth adds value not gates it
-- [Phase 01]: Used Next.js 16 proxy.ts instead of middleware.ts for session handling
-- [Phase 01]: JWT-only sessions with 30-day maxAge, no database adapter for Phase 1
-- [Phase 01]: Pre-installed shadcn avatar and dropdown-menu components for Plan 02
-- [Phase 01]: SignInHint placed outside success block for persistent visibility to signed-out users
-- [Phase 01]: Avatar fallback uses getInitials helper for first+last name initials
-- [Phase 02]: JSONB segments column stores raw TranscriptSegment[] for client-side format switching
-- [Phase 02]: Separate pooled (app) vs unpooled (migrations) DATABASE_URL endpoints
-- [Phase 02]: Unique index on userId+videoId for duplicate transcript detection
-- [Phase 02]: Text PKs with crypto.randomUUID() matching Auth.js adapter expectations
-- [Phase 02]: Explicit JWT strategy with adapter — Auth.js defaults to DB sessions when adapter present, explicit override preserves cookie sessions
-- [Phase 02]: DrizzleAdapter custom table config — usersTable/accountsTable point to schema, no sessions/verificationToken tables needed
-- [Phase 03]: onConflictDoNothing for duplicate transcripts — skip silently, preserve original save date
-- [Phase 03]: videoDuration nullable — Supadata fallback cannot provide duration
-- [Phase 03]: Removed next-themes useTheme() from sonner.tsx — project uses custom .dark class, not ThemeProvider
-- [Phase 03]: SaveTranscript uses window.location.href for history link — simpler than useRouter in renderless component
-- [Phase 04]: Full row select including segments for MVP — optimize with column selection later if needed
-- [Phase 04]: HistoryCard as client component — enables hover states and future interactivity
-- [Phase 04]: TranscriptSegment[] type assertion on JSONB segments column for runtime safety
-- [Phase 05]: POST method for delete endpoint matching existing save route pattern
-- [Phase 05]: Icon-only ghost buttons on HistoryCard, full labeled buttons on detail page
-- [Phase 05]: Copy writes plain text (no timestamps) for maximum paste compatibility
-- [Phase 05]: Exported HistoryTranscript interface from HistoryCard for shared usage
-- [Phase 05]: Set<string> for selection state for O(1) toggle/has operations
-- [Phase 06]: No debouncing for search -- instant filtering sufficient for list sizes under 200
-- [Phase 06]: selectAll targets only filtered (visible) items for intuitive search+selection coexistence
-- [Phase 06]: Shared download utility in lib/download.ts rather than modifying ActionButtons.tsx to avoid regressions
-- [Phase 06]: TranscriptDetail wrapper owns all interactive state as a single client boundary
-- [Phase 06]: SRT format affects copy/download only; viewer shows plain or timestamped text
-- [Phase 07]: Fail-open check endpoint returns { exists: false } instead of 401 for unauthenticated users
-- [Phase 07]: Pre-check runs before the 2.5s save delay for immediate duplicate detection
+Full decision log archived in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-None yet.
+None.
 
 ### Blockers/Concerns
 
-None yet.
+None.
 
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 07-01-PLAN.md (duplicate detection and warning)
-Resume file: .planning/phases/07-duplicate-detection-polish/07-01-SUMMARY.md
+Stopped at: v1.0 milestone completion
+Next step: `/gsd:new-milestone` for next version
