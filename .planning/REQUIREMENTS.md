@@ -28,8 +28,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **HIST-02**: History displays as cards with video title, thumbnail, save date, and text preview
 - [x] **HIST-03**: Cards sorted by most recent first
 - [x] **HIST-04**: User can click a card to view the full transcript
-- [ ] **HIST-05**: User can one-click copy full transcript text from history
-- [ ] **HIST-06**: User can delete individual transcripts from history
+- [x] **HIST-05**: User can one-click copy full transcript text from history
+- [x] **HIST-06**: User can delete individual transcripts from history
 - [ ] **HIST-07**: User can bulk-select and delete multiple transcripts
 - [ ] **HIST-08**: User can search history by video title or URL
 - [ ] **HIST-09**: User can export transcript from history in any available format (plain, timestamps, SRT)
@@ -40,7 +40,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **UIUX-01**: Navigation between main transcript tool and history page
 - [ ] **UIUX-02**: Show/hide timestamps toggle on transcript viewer
 - [ ] **UIUX-03**: Polished card layout for history items
-- [ ] **UIUX-04**: Clean copy-to-clipboard with visual feedback
+- [x] **UIUX-04**: Clean copy-to-clipboard with visual feedback
 
 ## v2 Requirements
 
@@ -92,8 +92,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HIST-02 | Phase 4 | Complete |
 | HIST-03 | Phase 4 | Complete |
 | HIST-04 | Phase 4 | Complete |
-| HIST-05 | Phase 5 | Pending |
-| HIST-06 | Phase 5 | Pending |
+| HIST-05 | Phase 5 | Complete |
+| HIST-06 | Phase 5 | Complete |
 | HIST-07 | Phase 5 | Pending |
 | HIST-08 | Phase 6 | Pending |
 | HIST-09 | Phase 6 | Pending |
@@ -101,7 +101,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UIUX-01 | Phase 4 | Complete |
 | UIUX-02 | Phase 6 | Pending |
 | UIUX-03 | Phase 6 | Pending |
-| UIUX-04 | Phase 5 | Pending |
+| UIUX-04 | Phase 5 | Complete |
 
 **Coverage:**
 - v1 requirements: 23 total

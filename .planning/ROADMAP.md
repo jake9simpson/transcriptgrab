@@ -89,7 +89,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User can select multiple transcripts with checkboxes
   5. User can delete all selected transcripts in one action
 **Plans**: 2 plans
-- [ ] 05-01-PLAN.md -- Copy and delete actions on individual transcripts (API + UI)
+- [x] 05-01-PLAN.md -- Copy and delete actions on individual transcripts (API + UI)
 - [ ] 05-02-PLAN.md -- Bulk-select and bulk-delete with selection mode
 
 ### Phase 6: Advanced History
@@ -126,6 +126,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 2. Database Infrastructure | 2/2 | Complete | 2026-02-18 |
 | 3. Transcript Persistence | 2/2 | Complete | 2026-02-18 |
 | 4. History List | 2/2 | Complete    | 2026-02-18 |
-| 5. History Actions | 0/2 | Not started | - |
+| 5. History Actions | 1/2 | In progress | - |
 | 6. Advanced History | 0/TBD | Not started | - |
 | 7. Duplicate Detection & Polish | 0/TBD | Not started | - |
