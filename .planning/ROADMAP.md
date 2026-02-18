@@ -115,7 +115,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. User can choose to save again or view existing saved transcript
   3. Duplicate check happens before save operation
   4. No race conditions or edge cases break auto-save functionality
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 07-01-PLAN.md -- Duplicate check query, check API endpoint, DuplicateWarning banner, SaveTranscript pre-check flow
 
 ## Progress
 
@@ -130,4 +132,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | 4. History List | 2/2 | Complete    | 2026-02-18 |
 | 5. History Actions | 2/2 | Complete | 2026-02-18 |
 | 6. Advanced History | 0/2 | Not started | - |
-| 7. Duplicate Detection & Polish | 0/TBD | Not started | - |
+| 7. Duplicate Detection & Polish | 0/1 | Not started | - |
