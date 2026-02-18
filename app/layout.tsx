@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import ThemeToggle from "@/components/ThemeToggle";
+import Providers from "@/components/Providers";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,15 +23,17 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen antialiased">
-        <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
-            <span className="text-lg font-semibold tracking-tight">TranscriptGrab</span>
-            <ThemeToggle />
-          </div>
-        </header>
-        <main className="mx-auto max-w-4xl px-4 py-8">
-          {children}
-        </main>
+        <Providers>
+          <header className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+            <div className="mx-auto flex max-w-4xl items-center justify-between px-4 py-3">
+              <span className="text-lg font-semibold tracking-tight">TranscriptGrab</span>
+              <ThemeToggle />
+            </div>
+          </header>
+          <main className="mx-auto max-w-4xl px-4 py-8">
+            {children}
+          </main>
+        </Providers>
       </body>
     </html>
   );
