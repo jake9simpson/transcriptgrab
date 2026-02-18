@@ -114,7 +114,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth Foundation | 0/2 | Planned | - |
+| 1. Auth Foundation | 1/2 | In Progress | - |
 | 2. Database Infrastructure | 0/TBD | Not started | - |
 | 3. Transcript Persistence | 0/TBD | Not started | - |
 | 4. History List | 0/TBD | Not started | - |
