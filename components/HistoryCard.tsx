@@ -22,7 +22,7 @@ import {
 import { decodeHtmlEntities, formatTimestamp, formatTranscriptText } from "@/lib/format";
 import type { TranscriptSegment } from "@/lib/types";
 
-interface HistoryTranscript {
+export interface HistoryTranscript {
   id: string;
   videoId: string;
   videoUrl: string;
