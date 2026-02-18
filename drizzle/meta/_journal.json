@@ -8,6 +8,13 @@
       "when": 1771397877272,
       "tag": "0000_watery_chronomancer",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1771402863549,
+      "tag": "0001_marvelous_cassandra_nova",
+      "breakpoints": true
     }
   ]
 }

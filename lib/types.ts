@@ -17,6 +17,7 @@ export interface TranscriptResult {
   segments: TranscriptSegment[];
   availableTracks: CaptionTrack[];
   videoId: string;
+  videoDuration?: number | null;
 }
 
 export interface VideoMetadata {

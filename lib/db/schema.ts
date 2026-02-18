@@ -61,6 +61,7 @@ export const transcripts = pgTable(
     videoUrl: text("videoUrl").notNull(),
     videoTitle: text("videoTitle").notNull(),
     thumbnailUrl: text("thumbnailUrl"),
+    videoDuration: integer("videoDuration"),
     segments: jsonb("segments").$type<TranscriptSegment[]>().notNull(),
     savedAt: timestamp("savedAt", { mode: "date" }).defaultNow().notNull(),
   },
