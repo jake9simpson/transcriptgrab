@@ -24,9 +24,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### History Page
 
-- [ ] **HIST-01**: Signed-in user can view all saved transcripts on a dedicated history page
-- [ ] **HIST-02**: History displays as cards with video title, thumbnail, save date, and text preview
-- [ ] **HIST-03**: Cards sorted by most recent first
+- [x] **HIST-01**: Signed-in user can view all saved transcripts on a dedicated history page
+- [x] **HIST-02**: History displays as cards with video title, thumbnail, save date, and text preview
+- [x] **HIST-03**: Cards sorted by most recent first
 - [ ] **HIST-04**: User can click a card to view the full transcript
 - [ ] **HIST-05**: User can one-click copy full transcript text from history
 - [ ] **HIST-06**: User can delete individual transcripts from history
@@ -37,7 +37,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### UI/UX
 
-- [ ] **UIUX-01**: Navigation between main transcript tool and history page
+- [x] **UIUX-01**: Navigation between main transcript tool and history page
 - [ ] **UIUX-02**: Show/hide timestamps toggle on transcript viewer
 - [ ] **UIUX-03**: Polished card layout for history items
 - [ ] **UIUX-04**: Clean copy-to-clipboard with visual feedback
@@ -88,9 +88,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PERS-03 | Phase 3 | Complete |
 | PERS-04 | Phase 7 | Pending |
 | PERS-05 | Phase 3 | Complete |
-| HIST-01 | Phase 4 | Pending |
-| HIST-02 | Phase 4 | Pending |
-| HIST-03 | Phase 4 | Pending |
+| HIST-01 | Phase 4 | Complete |
+| HIST-02 | Phase 4 | Complete |
+| HIST-03 | Phase 4 | Complete |
 | HIST-04 | Phase 4 | Pending |
 | HIST-05 | Phase 5 | Pending |
 | HIST-06 | Phase 5 | Pending |
@@ -98,7 +98,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HIST-08 | Phase 6 | Pending |
 | HIST-09 | Phase 6 | Pending |
 | HIST-10 | Phase 6 | Pending |
-| UIUX-01 | Phase 4 | Pending |
+| UIUX-01 | Phase 4 | Complete |
 | UIUX-02 | Phase 6 | Pending |
 | UIUX-03 | Phase 6 | Pending |
 | UIUX-04 | Phase 5 | Pending |
