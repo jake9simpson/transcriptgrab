@@ -9,19 +9,19 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 3 of 7 (Transcript Persistence)
-Plan: 1 of 2 in current phase
-Status: Plan 03-01 complete, executing 03-02 next
-Last activity: 2026-02-18 — Plan 03-01 backend persistence complete
+Phase: 3 of 7 (Transcript Persistence) -- COMPLETE
+Plan: 2 of 2 in current phase (all complete)
+Status: Phase 03 complete, ready for Phase 04
+Last activity: 2026-02-18 -- Plan 03-02 client auto-save complete
 
-Progress: [█████░░░░░] ~35%
+Progress: [██████░░░░] ~42%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
-- Average duration: 10.4 min
-- Total execution time: 0.87 hours
+- Total plans completed: 6
+- Average duration: 9 min
+- Total execution time: 0.9 hours
 
 **By Phase:**
 
@@ -32,10 +32,11 @@ Progress: [█████░░░░░] ~35%
 | 02    | P01  | 2 min    | 2     | 5     |
 | 02    | P02  | 40 min   | 2     | 3     |
 | 03    | P01  | 2 min    | 2     | 7     |
+| 03    | P02  | 2 min    | 2     | 6     |
 
 **Recent Trend:**
-- Last 5 plans: 5min, 3min, 2min, 40min, 2min
-- Trend: Plan 03-01 fully autonomous, fast execution
+- Last 5 plans: 3min, 2min, 40min, 2min, 2min
+- Trend: Phase 03 both plans autonomous, fast execution
 
 *Updated after each plan completion*
 
@@ -63,6 +64,8 @@ Recent decisions affecting current work:
 - [Phase 02]: DrizzleAdapter custom table config — usersTable/accountsTable point to schema, no sessions/verificationToken tables needed
 - [Phase 03]: onConflictDoNothing for duplicate transcripts — skip silently, preserve original save date
 - [Phase 03]: videoDuration nullable — Supadata fallback cannot provide duration
+- [Phase 03]: Removed next-themes useTheme() from sonner.tsx — project uses custom .dark class, not ThemeProvider
+- [Phase 03]: SaveTranscript uses window.location.href for history link — simpler than useRouter in renderless component
 
 ### Pending Todos
 
@@ -75,5 +78,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 03-01-PLAN.md
-Resume file: .planning/phases/03-transcript-persistence/03-01-SUMMARY.md
+Stopped at: Completed 03-02-PLAN.md (Phase 03 complete)
+Resume file: .planning/phases/03-transcript-persistence/03-02-SUMMARY.md
