@@ -12,7 +12,7 @@ This milestone transforms TranscriptGrab from a stateless transcript tool into a
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Auth Foundation** - Google OAuth sign-in, session management, protected routes
+- [x] **Phase 1: Auth Foundation** - Google OAuth sign-in, session management, protected routes
 - [ ] **Phase 2: Database Infrastructure** - Vercel Postgres setup, schema, migrations, connection pooling
 - [ ] **Phase 3: Transcript Persistence** - Auto-save transcripts, unauthenticated access preservation
 - [ ] **Phase 4: History List** - Transcript library with cards, thumbnails, navigation
@@ -33,8 +33,8 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. User can sign out from any page and sees sign-in prompt again
   5. Protected routes (like /history) redirect unauthenticated users
 **Plans**: 2 plans
-- [ ] 01-01-PLAN.md -- Auth.js v5 infrastructure (config, route handler, proxy, SessionProvider)
-- [ ] 01-02-PLAN.md -- Auth UI (sign-in button, avatar dropdown, sign-in hint, protected /history)
+- [x] 01-01-PLAN.md -- Auth.js v5 infrastructure (config, route handler, proxy, SessionProvider)
+- [x] 01-02-PLAN.md -- Auth UI (sign-in button, avatar dropdown, sign-in hint, protected /history)
 
 ### Phase 2: Database Infrastructure
 **Goal**: Database and schema ready to store user transcripts
@@ -114,7 +114,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Auth Foundation | 1/2 | In Progress | - |
+| 1. Auth Foundation | 2/2 | Complete | 2026-02-18 |
 | 2. Database Infrastructure | 0/TBD | Not started | - |
 | 3. Transcript Persistence | 0/TBD | Not started | - |
 | 4. History List | 0/TBD | Not started | - |

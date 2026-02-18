@@ -9,29 +9,30 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 
 ## Current Position
 
-Phase: 1 of 7 (Auth Foundation)
-Plan: 1 of 2 in current phase
-Status: Executing
-Last activity: 2026-02-18 — Completed 01-01 Auth.js infrastructure plan
+Phase: 1 of 7 (Auth Foundation) -- COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase Complete
+Last activity: 2026-02-18 — Completed 01-02 Auth UI components plan
 
-Progress: [█░░░░░░░░░] ~7%
+Progress: [██░░░░░░░░] ~14%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 5 min
-- Total execution time: 0.08 hours
+- Total plans completed: 2
+- Average duration: 4 min
+- Total execution time: 0.13 hours
 
 **By Phase:**
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 01    | P01  | 5 min    | 2     | 9     |
+| 01    | P02  | 3 min    | 3     | 5     |
 
 **Recent Trend:**
-- Last 5 plans: 5min
-- Trend: First plan completed
+- Last 5 plans: 5min, 3min
+- Trend: Consistent fast execution
 
 *Updated after each plan completion*
 
@@ -49,6 +50,8 @@ Recent decisions affecting current work:
 - [Phase 01]: Used Next.js 16 proxy.ts instead of middleware.ts for session handling
 - [Phase 01]: JWT-only sessions with 30-day maxAge, no database adapter for Phase 1
 - [Phase 01]: Pre-installed shadcn avatar and dropdown-menu components for Plan 02
+- [Phase 01]: SignInHint placed outside success block for persistent visibility to signed-out users
+- [Phase 01]: Avatar fallback uses getInitials helper for first+last name initials
 
 ### Pending Todos
 
@@ -61,5 +64,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-auth-foundation/01-01-SUMMARY.md
+Stopped at: Completed 01-02-PLAN.md — Phase 1 complete
+Resume file: .planning/phases/01-auth-foundation/01-02-SUMMARY.md
