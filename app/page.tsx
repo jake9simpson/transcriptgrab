@@ -16,6 +16,7 @@ import TimestampToggle from '@/components/TimestampToggle';
 import LanguageSelector from '@/components/LanguageSelector';
 import ActionButtons from '@/components/ActionButtons';
 import TranscriptViewer from '@/components/TranscriptViewer';
+import SignInHint from '@/components/SignInHint';
 
 export default function Home() {
   const [url, setUrl] = useState('');
@@ -156,6 +157,8 @@ export default function Home() {
           />
         </>
       )}
+
+      <SignInHint />
     </div>
   );
 }
