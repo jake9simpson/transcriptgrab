@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { toast } from "sonner";
 import type { TranscriptSegment } from "@/lib/types";
+import DuplicateWarning from "@/components/DuplicateWarning";
 
 interface SaveTranscriptProps {
   videoId: string;
@@ -24,12 +25,48 @@ export default function SaveTranscript({
 }: SaveTranscriptProps) {
   const { data: session } = useSession();
   const savedRef = useRef<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [duplicateInfo, setDuplicateInfo] = useState<{
+    transcriptId: string;
+  } | null>(null);
 
   useEffect(() => {
     if (!session?.user?.id) return;
     if (savedRef.current === videoId) return;
 
-    const timer = setTimeout(async () => {
+    setDuplicateInfo(null);
+    let cancelled = false;
+
+    async function checkAndSave() {
+      // Pre-check for duplicates
+      try {
+        const checkRes = await fetch(
+          `/api/transcript/check?videoId=${videoId}`
+        );
+        if (checkRes.ok) {
+          const checkData: { exists: boolean; transcriptId: string | null } =
+            await checkRes.json();
+          if (checkData.exists && checkData.transcriptId) {
+            if (!cancelled) {
+              setDuplicateInfo({ transcriptId: checkData.transcriptId });
+              savedRef.current = videoId;
+            }
+            return;
+          }
+        }
+      } catch {
+        // Fail-open: if check fails, proceed to save
+      }
+
+      if (cancelled) return;
+
+      // Wait 2.5s before saving (same delay as before)
+      await new Promise<void>((resolve) => {
+        timerRef.current = setTimeout(resolve, 2500);
+      });
+
+      if (cancelled) return;
+
       savedRef.current = videoId;
 
       try {
@@ -48,7 +85,8 @@ export default function SaveTranscript({
 
         if (!res.ok) return;
 
-        const data: { inserted: boolean; id: string | null } = await res.json();
+        const data: { inserted: boolean; id: string | null } =
+          await res.json();
 
         if (data.inserted) {
           toast("Transcript saved to history", {
@@ -65,10 +103,22 @@ export default function SaveTranscript({
       } catch {
         // Save failures are silent
       }
-    }, 2500);
+    }
 
-    return () => clearTimeout(timer);
+    checkAndSave();
+
+    return () => {
+      cancelled = true;
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+    };
   }, [session?.user?.id, videoId]);
+
+  if (duplicateInfo) {
+    return <DuplicateWarning transcriptId={duplicateInfo.transcriptId} />;
+  }
 
   return null;
 }
