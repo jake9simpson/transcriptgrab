@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getUserTranscripts } from "@/lib/db/queries";
-import HistoryCard from "@/components/HistoryCard";
+import HistoryActions from "@/components/HistoryActions";
 
 export default async function HistoryPage() {
   const session = await auth();
@@ -35,11 +35,7 @@ export default async function HistoryPage() {
           </Link>
         </div>
       ) : (
-        <div className="flex flex-col gap-3">
-          {transcripts.map((t) => (
-            <HistoryCard key={t.id} transcript={t} />
-          ))}
-        </div>
+        <HistoryActions transcripts={transcripts} />
       )}
     </div>
   );
