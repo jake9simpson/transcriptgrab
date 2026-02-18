@@ -46,7 +46,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Database schema includes transcripts table with proper foreign key to users
   4. Migrations run successfully in development and production
   5. Connection pooling configured to prevent exhaustion errors
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 02-01-PLAN.md -- Drizzle ORM setup, schema (users, accounts, transcripts), DB client, migration config
+- [ ] 02-02-PLAN.md -- Wire Auth.js DrizzleAdapter, generate migration, provision Neon database
 
 ### Phase 3: Transcript Persistence
 **Goal**: Signed-in users automatically save transcripts; unauthenticated users still work
