@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-02-17)
 ## Current Position
 
 Phase: 2 of 7 (Database Infrastructure)
-Plan: 0 of TBD in current phase
-Status: Context gathered, ready for planning
-Last activity: 2026-02-17 — Phase 2 context gathered
+Plan: 1 of 2 in current phase
+Status: Plan 01 complete, Plan 02 next
+Last activity: 2026-02-18 — Plan 02-01 executed (schema & tooling)
 
-Progress: [██░░░░░░░░] ~14%
+Progress: [███░░░░░░░] ~21%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 4 min
-- Total execution time: 0.13 hours
+- Total plans completed: 3
+- Average duration: 3 min
+- Total execution time: 0.17 hours
 
 **By Phase:**
 
@@ -29,9 +29,10 @@ Progress: [██░░░░░░░░] ~14%
 |-------|------|----------|-------|-------|
 | 01    | P01  | 5 min    | 2     | 9     |
 | 01    | P02  | 3 min    | 3     | 5     |
+| 02    | P01  | 2 min    | 2     | 5     |
 
 **Recent Trend:**
-- Last 5 plans: 5min, 3min
+- Last 5 plans: 5min, 3min, 2min
 - Trend: Consistent fast execution
 
 *Updated after each plan completion*
@@ -52,6 +53,10 @@ Recent decisions affecting current work:
 - [Phase 01]: Pre-installed shadcn avatar and dropdown-menu components for Plan 02
 - [Phase 01]: SignInHint placed outside success block for persistent visibility to signed-out users
 - [Phase 01]: Avatar fallback uses getInitials helper for first+last name initials
+- [Phase 02]: JSONB segments column stores raw TranscriptSegment[] for client-side format switching
+- [Phase 02]: Separate pooled (app) vs unpooled (migrations) DATABASE_URL endpoints
+- [Phase 02]: Unique index on userId+videoId for duplicate transcript detection
+- [Phase 02]: Text PKs with crypto.randomUUID() matching Auth.js adapter expectations
 
 ### Pending Todos
 
@@ -63,6 +68,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-17
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-database-infrastructure/02-CONTEXT.md
+Last session: 2026-02-18
+Stopped at: Completed 02-01-PLAN.md (schema & tooling)
+Resume file: .planning/phases/02-database-infrastructure/02-01-SUMMARY.md

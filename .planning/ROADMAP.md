@@ -47,7 +47,7 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. Migrations run successfully in development and production
   5. Connection pooling configured to prevent exhaustion errors
 **Plans**: 2 plans
-- [ ] 02-01-PLAN.md -- Drizzle ORM setup, schema (users, accounts, transcripts), DB client, migration config
+- [x] 02-01-PLAN.md -- Drizzle ORM setup, schema (users, accounts, transcripts), DB client, migration config
 - [ ] 02-02-PLAN.md -- Wire Auth.js DrizzleAdapter, generate migration, provision Neon database
 
 ### Phase 3: Transcript Persistence
@@ -117,7 +117,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4 → 5 → 6 → 7
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Auth Foundation | 2/2 | Complete | 2026-02-18 |
-| 2. Database Infrastructure | 0/TBD | Not started | - |
+| 2. Database Infrastructure | 1/2 | In Progress | - |
 | 3. Transcript Persistence | 0/TBD | Not started | - |
 | 4. History List | 0/TBD | Not started | - |
 | 5. History Actions | 0/TBD | Not started | - |
