@@ -170,18 +170,14 @@ async function fetchTimedText(baseUrl: string): Promise<TranscriptSegment[]> {
 }
 
 /**
- * Round-robin counter for alternating between Supadata API keys.
+ * Randomly pick a Supadata API key to distribute usage evenly across keys.
  */
-let supadataKeyIndex = 0;
-
 function getSupadataKey(): string {
   const keys = [process.env.SUPADATA_API_KEY, process.env.SUPADATA_API_KEY_2].filter(Boolean) as string[];
   if (keys.length === 0) {
     throw new Error('SUPADATA_API_KEY is not configured');
   }
-  const key = keys[supadataKeyIndex % keys.length];
-  supadataKeyIndex++;
-  return key;
+  return keys[Math.floor(Math.random() * keys.length)];
 }
 
 /**
