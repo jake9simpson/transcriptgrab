@@ -74,7 +74,9 @@ Decimal phases appear between their surrounding integers in numeric order.
   3. Cards appear with most recent saves at the top
   4. User can click a card and view the full saved transcript
   5. Navigation exists between main transcript tool and history page
-**Plans**: TBD
+**Plans**: 2 plans
+- [ ] 04-01-PLAN.md -- History list page with cards, query functions, and navigation
+- [ ] 04-02-PLAN.md -- Transcript detail page at /history/[id]
 
 ### Phase 5: History Actions
 **Goal**: Users can copy, delete, and bulk-manage transcripts from history
