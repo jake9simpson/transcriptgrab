@@ -1,4 +1,4 @@
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc, and, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { transcripts } from "@/lib/db/schema";
 import type { TranscriptSegment } from "@/lib/types";
@@ -39,4 +39,16 @@ export async function getTranscriptById(id: string, userId: string) {
     .limit(1);
 
   return rows[0] ?? null;
+}
+
+export async function deleteTranscripts(
+  ids: string[],
+  userId: string
+): Promise<number> {
+  const rows = await db
+    .delete(transcripts)
+    .where(and(inArray(transcripts.id, ids), eq(transcripts.userId, userId)))
+    .returning({ id: transcripts.id });
+
+  return rows.length;
 }
