@@ -80,6 +80,8 @@ Recent decisions affecting current work:
 - [Phase 05]: Copy writes plain text (no timestamps) for maximum paste compatibility
 - [Phase 05]: Exported HistoryTranscript interface from HistoryCard for shared usage
 - [Phase 05]: Set<string> for selection state for O(1) toggle/has operations
+- [Phase 06]: No debouncing for search -- instant filtering sufficient for list sizes under 200
+- [Phase 06]: selectAll targets only filtered (visible) items for intuitive search+selection coexistence
 - [Phase 06]: Shared download utility in lib/download.ts rather than modifying ActionButtons.tsx to avoid regressions
 - [Phase 06]: TranscriptDetail wrapper owns all interactive state as a single client boundary
 - [Phase 06]: SRT format affects copy/download only; viewer shows plain or timestamped text
@@ -95,5 +97,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-18
-Stopped at: Completed 06-02-PLAN.md (Phase 06 complete)
-Resume file: .planning/phases/06-advanced-history/06-02-SUMMARY.md
+Stopped at: Completed 06-01-PLAN.md (search filtering and card polish)
+Resume file: .planning/phases/06-advanced-history/06-01-SUMMARY.md
