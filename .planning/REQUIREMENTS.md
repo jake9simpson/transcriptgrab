@@ -30,7 +30,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **HIST-04**: User can click a card to view the full transcript
 - [x] **HIST-05**: User can one-click copy full transcript text from history
 - [x] **HIST-06**: User can delete individual transcripts from history
-- [ ] **HIST-07**: User can bulk-select and delete multiple transcripts
+- [x] **HIST-07**: User can bulk-select and delete multiple transcripts
 - [ ] **HIST-08**: User can search history by video title or URL
 - [ ] **HIST-09**: User can export transcript from history in any available format (plain, timestamps, SRT)
 - [ ] **HIST-10**: User can switch transcript format in history view without re-fetching from YouTube
@@ -94,7 +94,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | HIST-04 | Phase 4 | Complete |
 | HIST-05 | Phase 5 | Complete |
 | HIST-06 | Phase 5 | Complete |
-| HIST-07 | Phase 5 | Pending |
+| HIST-07 | Phase 5 | Complete |
 | HIST-08 | Phase 6 | Pending |
 | HIST-09 | Phase 6 | Pending |
 | HIST-10 | Phase 6 | Pending |
