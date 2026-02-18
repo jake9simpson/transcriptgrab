@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import ThemeToggle from "@/components/ThemeToggle";
 import AuthButton from "@/components/AuthButton";
 import Providers from "@/components/Providers";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -37,6 +38,7 @@ export default function RootLayout({
           <main className="mx-auto max-w-4xl px-4 py-8">
             {children}
           </main>
+          <Toaster />
         </Providers>
       </body>
     </html>
