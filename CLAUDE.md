@@ -5,7 +5,7 @@ YouTube transcript extractor deployed to Vercel.
 ## Architecture
 - Next.js 16 App Router, TypeScript, Tailwind v4, shadcn/ui
 - Transcript fetching: InnerTube ANDROID primary + Supadata API fallback (see `lib/youtube.ts`)
-- `SUPADATA_API_KEY` env var required on Vercel (set via `npx vercel env add`)
+- Supadata API keys: `SUPADATA_API_KEY` and `SUPADATA_API_KEY_2` on Vercel — randomly selected per request to distribute usage
 
 ## Key Files
 - `lib/youtube.ts` - transcript fetching (InnerTube + Supadata waterfall)

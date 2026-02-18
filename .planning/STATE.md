@@ -11,13 +11,15 @@ See: .planning/PROJECT.md (updated 2026-02-18)
 
 Milestone: v1.0 Auth & User History — SHIPPED 2026-02-18
 Status: Milestone complete. All 7 phases, 13 plans, 23 requirements satisfied.
-Last activity: 2026-02-18 — Milestone archived
+Last activity: 2026-02-18 — Added second Supadata API key with random selection (outside GSD)
 
 ## Accumulated Context
 
 ### Decisions
 
 Full decision log archived in PROJECT.md Key Decisions table.
+
+- Added second Supadata API key (`SUPADATA_API_KEY_2`) with random selection to distribute usage across keys (post-v1.0, outside GSD)
 
 ### Pending Todos
 
