@@ -173,7 +173,7 @@ async function fetchTimedText(baseUrl: string): Promise<TranscriptSegment[]> {
  * Randomly pick a Supadata API key to distribute usage evenly across keys.
  */
 function getSupadataKey(): string {
-  const keys = [process.env.SUPADATA_API_KEY, process.env.SUPADATA_API_KEY_2].filter(Boolean) as string[];
+  const keys = [process.env.SUPADATA_API_KEY, process.env.SUPADATA_API_KEY_2, process.env.SUPADATA_API_KEY_3].filter(Boolean) as string[];
   if (keys.length === 0) {
     throw new Error('SUPADATA_API_KEY is not configured');
   }
