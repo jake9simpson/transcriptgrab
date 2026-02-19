@@ -15,6 +15,13 @@
       "when": 1771402863549,
       "tag": "0001_marvelous_cassandra_nova",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1771489828951,
+      "tag": "0002_conscious_sister_grimm",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,627 @@
+.tg-transcript-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.05);
+  color: #0f0f0f;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 36px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.tg-transcript-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.tg-transcript-btn.tg-dark {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.tg-transcript-btn.tg-dark:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tg-transcript-btn svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.tg-transcript-btn span {
+  pointer-events: none;
+}
+
+/* ========================================
+   Panel styles
+   ======================================== */
+
+.tg-panel {
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  color: #0f0f0f;
+  line-height: 1.4;
+  background: #fff;
+  border: 1px solid #e5e5e5;
+  border-radius: 12px;
+  margin: 12px 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  width: 100%;
+  position: relative;
+}
+
+.tg-panel *,
+.tg-panel *::before,
+.tg-panel *::after {
+  box-sizing: border-box;
+}
+
+/* Dark mode */
+.tg-panel.tg-dark {
+  background: #212121;
+  border-color: #3f3f3f;
+  color: #fff;
+}
+
+/* --- Header --- */
+
+.tg-panel-header {
+  padding: 12px 16px;
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.tg-dark .tg-panel-header {
+  border-color: #3f3f3f;
+}
+
+.tg-panel-title-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.tg-panel-video-info {
+  min-width: 0;
+  flex: 1;
+}
+
+.tg-panel-video-title {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tg-panel-channel-name {
+  font-size: 12px;
+  color: #606060;
+  margin-top: 2px;
+}
+
+.tg-dark .tg-panel-channel-name {
+  color: #aaa;
+}
+
+/* Close button */
+.tg-panel-close {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  color: inherit;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.tg-panel-close:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.tg-dark .tg-panel-close:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Actions row --- */
+
+.tg-panel-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 8px 16px 0;
+}
+
+.tg-panel-btn {
+  height: 32px;
+  padding: 0 12px;
+  border-radius: 16px;
+  border: none;
+  background: rgba(0, 0, 0, 0.05);
+  color: #0f0f0f;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.tg-panel-btn:hover {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.tg-dark .tg-panel-btn {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.tg-dark .tg-panel-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Timestamp toggle */
+.tg-timestamp-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  cursor: pointer;
+  user-select: none;
+  margin-right: auto;
+}
+
+/* --- Panel body --- */
+
+.tg-panel-body {
+  max-height: 400px;
+  overflow-y: auto;
+  padding: 12px 16px;
+}
+
+.tg-dark .tg-panel-body {
+  scrollbar-color: #606060 transparent;
+}
+
+.tg-dark .tg-panel-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.tg-dark .tg-panel-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tg-dark .tg-panel-body::-webkit-scrollbar-thumb {
+  background: #606060;
+  border-radius: 4px;
+}
+
+/* --- Loading state --- */
+
+.tg-panel-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 40px 0;
+  color: #606060;
+}
+
+.tg-dark .tg-panel-loading {
+  color: #aaa;
+}
+
+.tg-spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-top-color: #606060;
+  border-radius: 50%;
+  animation: tg-spin 0.8s linear infinite;
+}
+
+.tg-dark .tg-spinner {
+  border-color: rgba(255, 255, 255, 0.1);
+  border-top-color: #aaa;
+}
+
+@keyframes tg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* --- Error state --- */
+
+.tg-panel-error {
+  text-align: center;
+  padding: 40px 16px;
+  color: #c00;
+}
+
+.tg-dark .tg-panel-error {
+  color: #f87171;
+}
+
+/* --- Segments --- */
+
+.tg-segment {
+  padding: 4px 0;
+  line-height: 1.5;
+}
+
+.tg-segment-timestamp {
+  display: none;
+  color: #065fd4;
+  font-family: monospace;
+  font-size: 12px;
+  margin-right: 8px;
+}
+
+.tg-timestamp-visible .tg-segment-timestamp {
+  display: inline;
+}
+
+.tg-dark .tg-segment-timestamp {
+  color: #3ea6ff;
+}
+
+/* --- Sign-in banner --- */
+
+.tg-panel-banner {
+  padding: 10px 16px;
+  background: rgba(96, 165, 250, 0.08);
+  border-bottom: 1px solid rgba(96, 165, 250, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.tg-dark .tg-panel-banner {
+  background: rgba(96, 165, 250, 0.1);
+  border-color: rgba(96, 165, 250, 0.15);
+}
+
+.tg-banner-link {
+  color: #065fd4;
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.tg-dark .tg-banner-link {
+  color: #3ea6ff;
+}
+
+.tg-banner-dismiss {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 2px;
+  margin-left: auto;
+  color: #606060;
+  opacity: 0.7;
+  font-size: 16px;
+  line-height: 1;
+}
+
+.tg-banner-dismiss:hover {
+  opacity: 1;
+}
+
+.tg-panel-banner.tg-banner-hiding {
+  opacity: 0;
+  max-height: 0;
+  padding: 0 16px;
+  overflow: hidden;
+  transition: opacity 0.2s ease, max-height 0.2s ease 0.1s, padding 0.2s ease 0.1s;
+}
+
+/* --- Toast --- */
+
+.tg-toast {
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #323232;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.tg-toast.tg-toast-visible {
+  opacity: 1;
+}
+
+/* ========================================
+   Tab bar
+   ======================================== */
+
+.tg-tab-bar {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid #e5e5e5;
+  padding: 0 16px;
+}
+
+.tg-dark .tg-tab-bar {
+  border-color: #3f3f3f;
+}
+
+.tg-tab {
+  padding: 10px 16px;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #606060;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.tg-tab:hover {
+  color: #0f0f0f;
+}
+
+.tg-tab.tg-tab-active {
+  color: #0f0f0f;
+  border-bottom-color: #065fd4;
+}
+
+.tg-dark .tg-tab {
+  color: #aaa;
+}
+
+.tg-dark .tg-tab:hover {
+  color: #fff;
+}
+
+.tg-dark .tg-tab.tg-tab-active {
+  color: #fff;
+  border-bottom-color: #3ea6ff;
+}
+
+/* ========================================
+   Tab content
+   ======================================== */
+
+.tg-tab-content {
+  /* Inherits scroll behavior from panel-body inside */
+}
+
+/* ========================================
+   Summary tab - Empty / CTA state
+   ======================================== */
+
+.tg-summary-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 16px;
+  text-align: center;
+  gap: 8px;
+}
+
+.tg-summary-icon {
+  color: #606060;
+  margin-bottom: 4px;
+}
+
+.tg-dark .tg-summary-icon {
+  color: #aaa;
+}
+
+.tg-summary-heading {
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.tg-summary-subtitle {
+  font-size: 13px;
+  color: #606060;
+}
+
+.tg-dark .tg-summary-subtitle {
+  color: #aaa;
+}
+
+/* Summarize CTA button */
+.tg-summarize-btn {
+  margin-top: 12px;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 18px;
+  border: none;
+  background: #065fd4;
+  color: #fff;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.tg-summarize-btn:hover {
+  background: #0550b3;
+}
+
+.tg-dark .tg-summarize-btn {
+  background: #3ea6ff;
+  color: #0f0f0f;
+}
+
+.tg-dark .tg-summarize-btn:hover {
+  background: #65b8ff;
+}
+
+/* Sign in to summarize link */
+.tg-summary-signin {
+  margin-top: 12px;
+  color: #065fd4;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.tg-summary-signin:hover {
+  text-decoration: underline;
+}
+
+.tg-dark .tg-summary-signin {
+  color: #3ea6ff;
+}
+
+/* ========================================
+   Summary tab - Actions row
+   ======================================== */
+
+.tg-summary-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* ========================================
+   Segmented format toggle
+   ======================================== */
+
+.tg-format-toggle {
+  display: inline-flex;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  padding: 2px;
+}
+
+.tg-dark .tg-format-toggle {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tg-format-option {
+  padding: 4px 12px;
+  border: none;
+  background: transparent;
+  color: #606060;
+  font-family: 'Roboto', Arial, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.tg-format-option:hover {
+  color: #0f0f0f;
+}
+
+.tg-format-option.tg-format-active {
+  background: #fff;
+  color: #0f0f0f;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.tg-dark .tg-format-option {
+  color: #aaa;
+}
+
+.tg-dark .tg-format-option:hover {
+  color: #fff;
+}
+
+.tg-dark .tg-format-option.tg-format-active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+/* ========================================
+   Summary content
+   ======================================== */
+
+.tg-summary-content {
+  line-height: 1.6;
+}
+
+.tg-summary-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.tg-summary-list li {
+  padding: 4px 0 4px 20px;
+  position: relative;
+}
+
+.tg-summary-list li::before {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 12px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #065fd4;
+}
+
+.tg-dark .tg-summary-list li::before {
+  background: #3ea6ff;
+}
+
+.tg-summary-paragraph {
+  margin: 0;
+  padding: 0;
+}
+
+/* ========================================
+   Saved indicator
+   ======================================== */
+
+.tg-saved-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #16a34a;
+  font-size: 12px;
+  font-weight: 500;
+  margin-left: 8px;
+  animation: tg-fade-in 0.3s ease;
+}
+
+.tg-dark .tg-saved-indicator {
+  color: #4ade80;
+}
+
+@keyframes tg-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}

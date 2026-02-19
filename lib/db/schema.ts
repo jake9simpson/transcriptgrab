@@ -72,3 +72,19 @@ export const transcripts = pgTable(
     ),
   ]
 );
+
+export const summaries = pgTable(
+  "summaries",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    videoId: text("videoId").notNull(),
+    bullets: text("bullets").notNull(),
+    paragraph: text("paragraph").notNull(),
+    createdAt: timestamp("createdAt", { mode: "date" }).defaultNow().notNull(),
+  },
+  (summary) => [
+    uniqueIndex("summary_video_idx").on(summary.videoId),
+  ]
+);

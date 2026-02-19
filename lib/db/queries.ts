@@ -1,6 +1,6 @@
 import { eq, desc, and, inArray } from "drizzle-orm";
 import { db } from "@/lib/db";
-import { transcripts } from "@/lib/db/schema";
+import { transcripts, summaries } from "@/lib/db/schema";
 import type { TranscriptSegment } from "@/lib/types";
 
 export async function saveTranscript(data: {
@@ -61,4 +61,25 @@ export async function deleteTranscripts(
     .returning({ id: transcripts.id });
 
   return rows.length;
+}
+
+export async function getSummaryByVideoId(videoId: string) {
+  const rows = await db
+    .select()
+    .from(summaries)
+    .where(eq(summaries.videoId, videoId))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function saveSummary(data: {
+  videoId: string;
+  bullets: string;
+  paragraph: string;
+}) {
+  return db
+    .insert(summaries)
+    .values(data)
+    .onConflictDoNothing({ target: [summaries.videoId] })
+    .returning({ id: summaries.id });
 }
