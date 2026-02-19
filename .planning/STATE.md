@@ -29,6 +29,12 @@ None.
 
 None.
 
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 1 | Add bulk copy transcripts button to history selection mode | 2026-02-19 | 6231878 | [1-add-bulk-copy-transcripts-button-to-hist](./quick/1-add-bulk-copy-transcripts-button-to-hist/) |
+
 ## Session Continuity
 
 Last session: 2026-02-19
