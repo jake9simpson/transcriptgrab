@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Copy, Trash2, Check, Download } from "lucide-react";
+import { Copy, Trash2, Check, Download, Search, ChevronUp, ChevronDown, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -45,9 +46,49 @@ export default function TranscriptDetail({
   const [format, setFormat] = useState<TranscriptFormat>("plain");
   const [copied, setCopied] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const [matchCount, setMatchCount] = useState(0);
+  const searchInputRef = useRef<HTMLInputElement>(null);
   const router = useRouter();
 
   const showTimestamps = format === "timestamps";
+
+  const handleMatchCountChange = useCallback((count: number) => {
+    setMatchCount(count);
+    setCurrentMatchIndex(0);
+  }, []);
+
+  function handlePrevMatch() {
+    if (matchCount === 0) return;
+    setCurrentMatchIndex((prev) => (prev - 1 + matchCount) % matchCount);
+  }
+
+  function handleNextMatch() {
+    if (matchCount === 0) return;
+    setCurrentMatchIndex((prev) => (prev + 1) % matchCount);
+  }
+
+  function handleClearSearch() {
+    setSearchQuery("");
+    setCurrentMatchIndex(0);
+    setMatchCount(0);
+  }
+
+  function handleSearchKeyDown(e: React.KeyboardEvent) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      if (e.shiftKey) {
+        handlePrevMatch();
+      } else {
+        handleNextMatch();
+      }
+    }
+    if (e.key === "Escape") {
+      handleClearSearch();
+      searchInputRef.current?.blur();
+    }
+  }
 
   function handleCopy() {
     let text: string;
@@ -155,7 +196,62 @@ export default function TranscriptDetail({
         </AlertDialog>
       </div>
 
-      <TranscriptViewer segments={segments} showTimestamps={showTimestamps} />
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            ref={searchInputRef}
+            placeholder="Search in transcript..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={handleSearchKeyDown}
+            className="pl-9 pr-9"
+          />
+          {searchQuery && (
+            <button
+              onClick={handleClearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        {searchQuery.trim() && (
+          <div className="flex items-center gap-1">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {matchCount === 0
+                ? "No matches"
+                : `${currentMatchIndex + 1} of ${matchCount}`}
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handlePrevMatch}
+              disabled={matchCount === 0}
+            >
+              <ChevronUp className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={handleNextMatch}
+              disabled={matchCount === 0}
+            >
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <TranscriptViewer
+        segments={segments}
+        showTimestamps={showTimestamps}
+        searchQuery={searchQuery}
+        currentMatchIndex={currentMatchIndex}
+        onMatchCountChange={handleMatchCountChange}
+      />
     </div>
   );
 }

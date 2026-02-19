@@ -51,8 +51,10 @@ function formatDate(date: Date): string {
 
 export default function HistoryCard({
   transcript,
+  matchSnippet,
 }: {
   transcript: HistoryTranscript;
+  matchSnippet?: string;
 }) {
   const [copied, setCopied] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -111,6 +113,11 @@ export default function HistoryCard({
             <p className="mt-1 text-sm text-muted-foreground line-clamp-2">
               {getTextPreview(transcript.segments)}
             </p>
+            {matchSnippet && (
+              <p className="mt-1 text-xs text-muted-foreground/70 line-clamp-2 italic">
+                &ldquo;...{matchSnippet}...&rdquo;
+              </p>
+            )}
             <div className="mt-2 flex items-center justify-between border-t border-border/50 pt-2">
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <span>{formatDate(transcript.savedAt)}</span>
