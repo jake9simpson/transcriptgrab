@@ -3,7 +3,8 @@
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2, CheckSquare, X, Search } from "lucide-react";
+import { Trash2, CheckSquare, X, Search, Copy } from "lucide-react";
+import { formatTranscriptText } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -72,6 +73,17 @@ export default function HistoryActions({
     setSelected(new Set());
   }
 
+  async function handleBulkCopy() {
+    const selectedTranscripts = filteredTranscripts.filter((t) =>
+      selected.has(t.id)
+    );
+    const combined = selectedTranscripts
+      .map((t) => `${t.videoTitle}\n\n${formatTranscriptText(t.segments, false)}`)
+      .join("\n\n---\n\n");
+    await navigator.clipboard.writeText(combined);
+    toast(`Copied ${selected.size} transcript(s) to clipboard`);
+  }
+
   async function handleBulkDelete() {
     setDeleting(true);
     try {
@@ -120,6 +132,15 @@ export default function HistoryActions({
                 Deselect All
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={selected.size === 0}
+              onClick={handleBulkCopy}
+            >
+              <Copy className="mr-1.5 h-4 w-4" />
+              Copy Selected
+            </Button>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button
