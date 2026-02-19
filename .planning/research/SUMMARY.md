@@ -1,280 +1,209 @@
 # Project Research Summary
 
-**Project:** TranscriptGrab - Auth & User History
-**Domain:** YouTube transcript extraction tool with authentication and persistent storage
-**Researched:** 2026-02-17
+**Project:** TranscriptGrab v2.0 — Chrome Extension + AI Summaries
+**Domain:** Manifest V3 Chrome Extension + Gemini AI Integration with existing Next.js/Vercel app
+**Researched:** 2026-02-18
 **Confidence:** HIGH
 
 ## Executive Summary
 
-TranscriptGrab is adding Google OAuth authentication and user history features to an existing Next.js 16 YouTube transcript tool. The standard approach for Next.js 16 App Router applications in 2026 combines Auth.js v5 (NextAuth beta), Drizzle ORM, and Vercel Postgres (Neon-backed) for authentication and data persistence. This stack is lightweight, edge-compatible, and well-documented with production-ready patterns.
+TranscriptGrab v2.0 adds a Chrome extension that injects a transcript panel into YouTube video pages, plus AI-powered summaries via Google Gemini. The v1.0 web app (Next.js 16, Auth.js v5, Drizzle/Neon, InnerTube + Supadata) is fully shipped and becomes the backend for this milestone — the extension calls the existing API routes rather than duplicating any transcript logic. The recommended build approach is WXT framework for the extension scaffold (the community consensus replacement for Plasmo and CRXJS), `@google/genai` SDK calling `gemini-2.5-flash` through a new backend proxy route, and a message-passing architecture where all API calls flow through the background service worker, not the content script.
 
-The recommended implementation follows an "optional authentication" pattern where core transcript functionality remains public while offering authenticated users the ability to save and revisit their transcript history. This low-friction approach allows users to try the tool before creating an account while providing clear value for sign-up (unlimited history, instant re-access, format switching). The architecture uses JWT sessions for edge runtime compatibility, middleware-based route protection, and auto-save on fetch for seamless user experience.
+The single most important architectural constraint is that Manifest V3 creates three isolated execution environments — content script, background service worker, and popup — that cannot directly share state or make each other's API calls. Every design decision flows from this: API calls must be proxied through the background service worker (content scripts face CORS restrictions that service workers do not), the Gemini API key must live in Vercel environment variables and never appear in the extension bundle, and any state that needs to survive service worker termination must be persisted to `chrome.storage.local`. The extension is intentionally stateless except for cached session data.
 
-Key risks center on environment variable configuration (Google OAuth callbacks, JWT secrets), database connection pooling in serverless environments, and auto-save race conditions. These are well-documented pitfalls with established mitigation strategies: explicit environment setup checklists, using pooled connection strings, and timestamp-based update versioning. The research shows high confidence across all areas with clear implementation paths and comprehensive documentation.
+The primary risks are: (1) YouTube's SPA navigation breaking content script injection — solvable with `yt-navigate-finish` event listening and a MutationObserver fallback; (2) Gemini's free tier being too restrictive for any real user load (20 RPD after December 2025 cuts) — requires summary caching by video ID in the existing DB before any public launch; (3) Chrome Web Store review adding 1-4 weeks to the timeline — requires starting store listing preparation in parallel with final development, not after. None of these risks are blockers, but all three require upfront design decisions rather than retrofitting.
+
+---
 
 ## Key Findings
 
 ### Recommended Stack
 
-The modern Next.js 16 stack for authentication and database features centers on Auth.js v5, Drizzle ORM, and Vercel Postgres. This combination provides edge runtime compatibility, minimal bundle size, and strong type safety.
+The extension is built with WXT (`^0.20.17`), the current community-standard framework for Manifest V3 extensions in 2026. WXT provides HMR for content scripts during development, Vite bundling (required for MV3's no-remote-code constraint), and React 19 support via `@wxt-dev/module-react`. Plasmo is effectively abandoned and must not be used. CRXJS (`^2.3.0`) is a viable alternative but has uncertain long-term maintenance.
 
-**Core technologies:**
-- **Auth.js v5 (next-auth@beta)**: Google OAuth with universal `auth()` function — official rewrite for App Router with edge compatibility and production-ready status
-- **Drizzle ORM**: TypeScript-first database operations — 40KB vs Prisma's 500KB, better edge/serverless performance, SQL-first approach with full type safety
-- **Vercel Postgres**: Serverless PostgreSQL storage — native Vercel integration (Neon-backed), zero-config setup, automatic connection pooling via websockets
-- **@auth/drizzle-adapter**: Auth.js database integration — official adapter connecting sessions/accounts to Drizzle ORM with proper type safety
-- **Zod**: Runtime schema validation — industry standard for TypeScript validation with seamless Server Actions integration
+Gemini integration uses the `@google/genai` SDK (`^1.41.0`) — the GA replacement for the deprecated `@google/generative-ai`. The target model is `gemini-2.5-flash` with a 1M token context window, which handles any YouTube transcript without chunking. Tailwind v4 in WXT requires the `@tailwindcss/vite` Vite plugin, not the PostCSS path (which is broken in WXT's Vite pipeline).
 
-**Critical version requirements:**
-- Next.js 15.2.3+ (fixes CVE-2025-29927 middleware bypass vulnerability)
-- Use `next-auth@beta` (v5.0.0-beta), not v4 (deprecated for App Router)
-- Drizzle ORM 0.45.1+ with aligned Drizzle Kit version (0.31.5+)
+**Core technologies — new additions only:**
+- **WXT `^0.20.17`**: Extension build framework — only maintained MV3 framework with HMR and React support
+- **`@wxt-dev/module-react`**: React integration for extension entry points
+- **`@google/genai` `^1.41.0`**: Gemini SDK — GA replacement for legacy SDK, installed in Next.js root (server-side calls only)
+- **`@tailwindcss/vite` `^4.0.0`**: Tailwind v4 in WXT — Vite plugin path only, not PostCSS
+
+**Critical version constraints:**
+- Use `gemini-2.5-flash` — do NOT use `gemini-2.0-flash` (deprecated) or `gemini-1.5-flash` (superseded)
+- Use `@google/genai` not `@google/generative-ai` — legacy SDK is deprecated
 
 ### Expected Features
 
-Research into transcript tools, read-later apps, and meeting transcription software reveals clear feature expectations and competitive positioning opportunities.
+The MVP (v2.0) covers the full extension lifecycle: install, inject on YouTube, display transcript, copy/format/language options, AI summary with bullet/paragraph toggle, auth detection from the web app session, auto-save to history when signed in, and a non-blocking sign-in prompt for unauthenticated users. Every major competitor (Glasp, Eightify, YTScribe) provides the transcript panel as a baseline expectation. The AI summary and auto-save-to-personal-library combination is a genuine differentiator — no competitor links to a companion web app history.
 
-**Must have (table stakes):**
-- Auto-save on fetch (signed-in users) — users expect this behavior without clicking "save"
-- Transcript history list with thumbnails — chronological library with visual identification
-- Quick copy from history — primary use case without re-fetching
-- Basic search (title/URL) — find specific videos in growing library
-- Delete individual items — cleanup capability
-- Unauthenticated access — can't block core tool with auth wall
-- Export from history — reuse existing format.ts functions
+**Must have (v2.0 table stakes):**
+- Transcript panel injected above description area on YouTube video pages
+- One-click transcript fetch with loading and error states
+- Copy to clipboard with visual confirmation
+- Format toggle (plain text / with timestamps)
+- Language selection for multi-caption videos
+- AI summary via Gemini — bullet points with paragraph mode toggle
+- Auth detection from transcriptgrab.com session
+- Auto-save to history when signed in, with confirmation
+- Non-blocking sign-in prompt for unauthenticated users
 
-**Should have (competitive differentiators):**
-- No "25 transcript limit" on free tier — competitive advantage over Otter.ai which archives after 25
-- Instant re-copy without re-fetch — history stores full transcript, faster than competitors
-- Duplicate detection — prevent same video saved multiple times
-- Bulk delete — faster library cleanup when users have 50+ transcripts
-- Format switching in history — change from plain to SRT without new fetch
+**Should have (v2.x, post-validation):**
+- Clickable timestamps that seek the video (requires YouTube postMessage API integration)
+- In-panel transcript search with highlight
+- SRT format option in extension panel
 
-**Defer (v2+):**
-- Tags/labels system — only if flat list + search proves insufficient
-- Bulk export (ZIP download) — edge case until users explicitly request
-- Share links (public URLs) — high complexity, security concerns, defer until clear demand
-- Browser extension — major effort, separate distribution channel
-- AI summarization — scope creep, users can paste into ChatGPT themselves
-
-**Anti-features to avoid:**
-- Folders/nested collections — creates decision fatigue, flat list + tags faster per research
-- Inline transcript editing — drift from source, unclear value vs re-fetch
-- Storage quotas — text is cheap, don't add artificial friction
-- Social features — TranscriptGrab is a utility, not a social network
+**Defer to v3+:**
+- Firefox/Safari extension (validate Chrome first)
+- Per-video AI chat (Q&A against transcript)
+- Chapter-aware AI summaries
+- Offline transcript cache
 
 ### Architecture Approach
 
-The standard architecture for Next.js 16 authentication + database follows a layered pattern with middleware route protection, Server Components for data access, and optional client-side state for UI personalization. Auth.js handles OAuth flows and session management while Drizzle provides type-safe database access.
+The extension lives in an `extension/` subdirectory at the repo root with its own `package.json` and WXT build pipeline. It shares no build tooling with the Next.js app but calls the same API routes. The only new backend code is a single `POST /api/summarize` route that proxies to Gemini using the server-side `GEMINI_API_KEY`. All other extension API calls (`/api/transcript`, `/api/metadata`, `/api/auth/session`) already exist.
 
 **Major components:**
-1. **middleware.ts** — Session validation and route protection using Auth.js `auth()` export, optimistic encrypted cookie checks, redirects unauthenticated users from /history
-2. **auth.ts** — NextAuth.js configuration with Google OAuth provider, Drizzle adapter setup, JWT session strategy for edge compatibility
-3. **lib/db/** — Drizzle schema (Auth.js adapter tables + transcripts) and client instance, centralized database concerns
-4. **app/api/transcript/route.ts** — Enhanced with conditional DB save logic if user authenticated, preserves existing public functionality
-5. **app/history/page.tsx** — Protected Server Component that queries user's transcripts, server-side rendering with no client state
 
-**Key patterns:**
-- **Optional authentication**: Public tool + protected features, low barrier to entry, auto-save if signed in
-- **JWT sessions**: Stateless, edge-compatible, no DB query per request (vs database sessions)
-- **Middleware route protection**: Centralized auth checks at edge layer, fast redirects, matcher config excludes static assets
-- **Server Component data access**: Direct Drizzle queries in Server Components, no API route needed for SSR data
+1. **Content Script** (`extension/src/content/`) — Detects YouTube video pages, injects button and transcript panel via Shadow DOM, listens for SPA navigation events, relays all API requests to background service worker via `chrome.runtime.sendMessage`
+2. **Background Service Worker** (`extension/src/background/`) — Proxies all API fetches (bypassing CORS via `host_permissions`), checks session via `/api/auth/session`, persists session data to `chrome.storage.local`, routes messages between content script and backend
+3. **`/api/summarize` route** (new, Next.js web app) — Receives transcript text from background SW, calls Gemini with `GEMINI_API_KEY`, returns structured summary; handles safety filter blocks and rate limit errors gracefully
+4. **Extension popup** (optional) — Displays auth status and link to web app; reads from `chrome.storage.local`
 
-**Build order to avoid dependencies:**
-1. Database foundation (schema, migrations, Drizzle client)
-2. Authentication setup (Google OAuth, Auth.js config, middleware)
-3. Transcript persistence (enhance API route with DB save)
-4. History page (Server Component with Drizzle queries)
+**Key patterns enforced throughout:**
+- Shadow DOM for all injected UI — prevents YouTube CSS from bleeding into extension panel
+- Message-passing for all privileged operations — content script sends to background SW, never fetches directly
+- `yt-navigate-finish` event + MutationObserver fallback — handles YouTube SPA navigation
+- Session detection via credentialed GET to `/api/auth/session` — not direct cookie reads (encrypted JWT cannot be decoded without AUTH_SECRET)
+- All state persisted to `chrome.storage.local`, never service worker globals
 
 ### Critical Pitfalls
 
-Research identified eight critical pitfalls with clear prevention strategies, all well-documented in Next.js + Auth.js deployments.
+1. **Content script CORS** — Content scripts on youtube.com cannot make cross-origin requests even with `host_permissions`. Route all API calls through the background service worker. Getting this wrong requires a new extension release to fix (1-2 week store review cycle per fix).
 
-1. **Environment variable configuration hell** — Google OAuth redirects to localhost in production, JWT decryption failures. Prevention: Set `NEXTAUTH_URL=https://yourdomain.com` in Vercel production, generate `NEXTAUTH_SECRET` with `openssl rand -base64 32`, add exact callback URL to Google Cloud Console, redeploy after env var changes.
+2. **YouTube SPA navigation** — Chrome does not re-inject content scripts on SPA navigation. Must listen for `yt-navigate-finish` DOM event and re-inject UI on each video change, with duplicate injection cleanup. Failure means extension only works on first page load.
 
-2. **Middleware blocking legitimate requests** — Redirect loops, broken static assets, edge runtime incompatibilities. Prevention: Always define matcher config to exclude `/_next/static`, images, API routes; use `jose` for JWT verification (not `jsonwebtoken`); distinguish protected vs public routes.
+3. **Service worker termination** — MV3 service workers die after 30 seconds of idle, wiping all module-level state. Persist any cross-request state to `chrome.storage.local`. Register all event listeners synchronously at the top level of the service worker file — not inside callbacks.
 
-3. **Database connection pool exhaustion** — "Connection pool timeout" errors after deployment, 200 connection limit maxed out. Prevention: Use `POSTGRES_URL` (pooled), not `POSTGRES_URL_NON_POOLING`; with `@vercel/postgres` pooling is automatic; avoid module-level pool creation.
+4. **Gemini rate limits** — Free tier is approximately 20 RPD as of January 2026 (down 92% from prior year). Cache summaries by `videoId` in the Neon DB before any public launch. Upgrade to paid tier before launch. Free tier exhausts in minutes with real users.
 
-4. **Foreign key cascade delete data loss** — Transcript history deleted when session expires. Prevention: Use `ON DELETE RESTRICT` (not CASCADE) from transcripts.userId to users.id; implement soft deletes for user accounts; test deletion flows thoroughly.
+5. **Chrome Web Store review** — Review takes 1-4 weeks for new extensions. Overly broad permissions (e.g., `<all_urls>`) cause rejection. Start store listing preparation (privacy policy, description, demo video) during Phase 3 development, not after it finishes.
 
-5. **Auto-save race conditions** — User edits overwritten by out-of-order requests. Prevention: Timestamp-based updates with `WHERE updated_at <= $timestamp`; aggressive debounce (500-1000ms); return version from server for conflict detection.
-
-6. **Database adapter schema mismatch** — "Relation does not exist" errors, missing columns. Prevention: Copy official Auth.js Drizzle adapter schema exactly; validate before implementing auth flow; test with real OAuth immediately.
-
-7. **SessionProvider in Server Component** — Build fails with "cannot be used in Server Components" error. Prevention: Create separate `"use client"` wrapper component for SessionProvider; import in layout.tsx, not SessionProvider directly.
-
-8. **CVE-2025-29927 middleware bypass** — Attackers bypass auth with crafted headers (CVSS 9.1). Prevention: Update Next.js to 15.2.3+ immediately; implement defense-in-depth with data access layer auth checks.
+---
 
 ## Implications for Roadmap
 
-Based on research, this milestone naturally divides into three sequential phases driven by architectural dependencies and pitfall mitigation strategies.
+Based on combined research, the natural build order follows the dependency chain: backend proxy first (standalone testable), then extension scaffold, then background service worker, then content script injection, then full panel UI, then AI summary as an additive layer. Publishing is a distinct final phase due to Chrome Web Store lead time.
 
-### Phase 1: Auth Foundation
-**Rationale:** Authentication infrastructure must come first as it's a hard dependency for all user-scoped features. Environment configuration and middleware patterns establish before database interactions to avoid compound debugging of auth + database issues simultaneously.
+### Phase 1: Extension Foundation
 
-**Delivers:** Working Google OAuth sign-in, protected route middleware, session management, sign-out flow
+**Rationale:** The message-passing architecture, YouTube SPA navigation handling, and session detection must be correct before any user-facing UI is built. Retrofitting these foundational patterns after UI exists is high-cost rework. All 6 critical Phase 1 pitfalls (CORS, SPA nav, service worker state, remote code ban, auth session, DOM selector brittleness) are architectural — they must be established upfront.
 
-**Addresses features:**
-- Google OAuth sign-in (table stakes)
-- Sign out capability (table stakes)
+**Delivers:** Working extension scaffold with no errors, placeholder button injected on YouTube video pages surviving multiple navigations, correct session detection from transcriptgrab.com, message-passing routing proven end-to-end.
 
-**Avoids pitfalls:**
-- Environment variable configuration hell (verify Google OAuth callbacks, JWT secrets, redeploy workflow)
-- Middleware blocking requests (matcher config, route protection strategy)
-- CVE-2025-29927 vulnerability (Next.js version check, security update)
-- SessionProvider placement (client wrapper pattern)
+**Addresses:** Extension infrastructure, auth detection, YouTube DOM injection with fallback selectors
 
-**Research flag:** Skip research-phase — standard Auth.js v5 + Google OAuth pattern, well-documented in official docs and Context7 library.
+**Must avoid:** Direct content script fetches (message-passing from day one), hardcoded single DOM selector (fallback list immediately), service worker global state
 
-### Phase 2: Database Setup & Schema
-**Rationale:** Database schema and connection pooling must be correct before implementing any data persistence. Establishing Auth.js adapter tables alongside custom transcripts table ensures foreign key relationships and cascade behaviors are intentional. Connection pooling configuration prevents production failures.
+**Research flag:** Standard patterns, well-documented in official Chrome extension docs. No additional research needed.
 
-**Delivers:** Vercel Postgres instance, Drizzle schema (Auth.js tables + transcripts), migrations, database client, connection pooling
+### Phase 2: Transcript Panel + Backend Proxy
 
-**Uses stack:**
-- Drizzle ORM 0.45.1+
-- Vercel Postgres with `@vercel/postgres`
-- @auth/drizzle-adapter
-- Drizzle Kit for migrations
+**Rationale:** The Gemini proxy route is the only new backend code — creating it first enables curl-testing before extension UI exists. The transcript panel is the core user-facing deliverable and a hard prerequisite for AI summary.
 
-**Implements architecture:**
-- lib/db/schema.ts (Auth.js adapter tables + custom transcripts)
-- lib/db/index.ts (Drizzle client instance)
-- drizzle.config.ts (migration configuration)
+**Delivers:** `POST /api/summarize` route on Vercel (curl-testable independently), full Shadow DOM transcript panel on YouTube pages with transcript text, timestamps, copy to clipboard, format toggle, language selector, loading states, and error handling.
 
-**Avoids pitfalls:**
-- Connection pool exhaustion (use `POSTGRES_URL` pooled, test under load)
-- Foreign key cascade deletes (explicit `ON DELETE RESTRICT` for transcripts)
-- Database adapter schema mismatch (copy official adapter schema, validate)
+**Uses:** Shadow DOM injection pattern, message-passing to existing `/api/transcript` route, `@google/genai` SDK installed in Next.js root
 
-**Research flag:** Skip research-phase — Drizzle + Vercel Postgres integration is standard, Context7 library covers setup patterns.
+**Must avoid:** Exposing `GEMINI_API_KEY` in extension bundle (all Gemini calls are server-side only), YouTube CSS bleed-through (Shadow DOM isolates styles)
 
-### Phase 3: Transcript History & Persistence
-**Rationale:** With auth and database established, implement user-facing features. Auto-save on fetch provides immediate value while history page demonstrates saved transcript library. This phase brings together all prior infrastructure.
+**Research flag:** Standard patterns for Shadow DOM and transcript display. The Gemini proxy route is straightforward. No additional research needed.
 
-**Delivers:** Auto-save on transcript fetch (if authenticated), history page with search/delete/export, thumbnail display, quick copy workflow
+### Phase 3: AI Summary + Auto-Save
 
-**Addresses features:**
-- Auto-save on fetch (table stakes)
-- Transcript history list (table stakes)
-- Quick copy from history (table stakes)
-- Basic search by title/URL (table stakes)
-- Delete individual transcripts (table stakes)
-- Thumbnail preview (table stakes)
-- Export from history (table stakes)
+**Rationale:** Summary is additive on top of the working transcript panel. Auto-save depends on auth detection established in Phase 1. Both features require the panel from Phase 2 to exist first.
 
-**Implements architecture:**
-- Enhanced app/api/transcript/route.ts (conditional DB save)
-- app/history/page.tsx (Server Component with Drizzle queries)
-- History UI components (cards, search, actions)
+**Delivers:** "Summarize" button in transcript panel, Gemini summary displayed as bullet points or paragraph (user-toggled), auto-save confirmation when signed in, sign-in prompt for unauthenticated users, summary caching by `videoId` in DB.
 
-**Avoids pitfalls:**
-- Auto-save race conditions (timestamp-based updates, debounce strategy, version checking)
+**Uses:** `gemini-2.5-flash` model, `/api/summarize` proxy, existing `/api/auth/session` endpoint, Drizzle schema addition for `summary` column on transcripts table
 
-**Research flag:** Skip research-phase — Standard Next.js Server Component patterns, existing format.ts reuse, straightforward CRUD operations.
+**Must avoid:** Missing Gemini safety filter handling (`finishReason: 'SAFETY'`), missing 429 rate limit handling, no caching (exhausts free tier immediately), auto-opening summary panel on every video load (must be user-triggered)
 
-### Phase 4: Polish & Differentiators (Post-MVP)
-**Rationale:** After core functionality validated in production, add competitive differentiators based on user feedback. These features aren't required for launch but provide clear value additions.
+**Research flag:** Gemini safety filter behavior needs validation testing against diverse video categories (news, politics, medical, gaming) before shipping. Build error handling before the happy path.
 
-**Delivers:** Duplicate detection, bulk delete, format switching in history, date range filtering
+### Phase 4: Chrome Web Store Publishing
 
-**Addresses features:**
-- Duplicate detection (differentiator)
-- Bulk delete (differentiator)
-- Format switching in history (differentiator)
-- Filter by date range (should-have)
+**Rationale:** Publishing is a distinct phase because Chrome Web Store review takes 1-4 weeks and has independent requirements (privacy policy, store description, demo video, permission justification) that can be prepared in parallel with Phase 3 final development.
 
-**Research flag:** Skip research-phase — Extensions of Phase 3 patterns, no new technical domains.
+**Delivers:** Extension published on Chrome Web Store, store listing with privacy policy at stable URL, all permissions justified in listing, production environment variables set (`GEMINI_API_KEY` on Vercel).
+
+**Must avoid:** `<all_urls>` wildcard permissions (instant rejection), missing privacy policy URL, submitting without a demo video, launching with free-tier Gemini only (upgrade to paid before launch)
+
+**Research flag:** Chrome Web Store review policies are documented in official Chrome docs and fully covered by PITFALLS.md. Permission audit checklist is actionable as-is. No additional research needed.
 
 ### Phase Ordering Rationale
 
-- **Phase 1 before Phase 2:** Auth must work before creating database schemas with foreign keys to users table; middleware route protection established early prevents security gaps
-- **Phase 2 before Phase 3:** Database schema must exist before implementing data persistence; connection pooling configured before write operations prevent production failures
-- **Phase 3 after 1+2:** User-scoped features require both auth (to get userId) and database (to store transcripts); this ordering allows testing each layer independently
-- **Phase 4 deferred:** Features are enhancements, not blockers; defer until core validated to avoid premature optimization
-
-This phasing avoids the most common pitfall: attempting to debug auth, database, and application logic simultaneously. Each phase has clear completion criteria and can be tested in isolation.
+- **Phase 1 before Phase 2:** Message-passing architecture and SPA navigation must be proven correct before building the panel. Wrong call here requires full rework of everything downstream.
+- **Backend proxy early in Phase 2:** The `/api/summarize` route can be curl-tested independently before the extension UI exists, enabling parallel progress and de-risking Gemini integration early.
+- **Phase 3 after Phase 2:** AI summary tab is additive to the panel. Auth detection is already working from Phase 1.
+- **Phase 4 as distinct phase:** 3+ week Chrome Web Store lead time means publishing cannot be deferred to the last day. Store listing work starts during Phase 3.
 
 ### Research Flags
 
-**Phases with standard patterns (skip research-phase):**
-- **Phase 1:** Auth.js v5 + Google OAuth is well-documented in official docs and Context7 library
-- **Phase 2:** Drizzle + Vercel Postgres integration has official tutorials and adapter documentation
-- **Phase 3:** Server Component patterns and CRUD operations are standard Next.js App Router
-- **Phase 4:** Extensions of Phase 3 patterns, no new technical domains
+Phases needing deeper research during planning:
+- **Phase 3:** Gemini safety filter behavior needs hands-on testing against diverse content categories before shipping. PITFALLS.md documents which categories to test but not the optimal `safetySettings` configuration for a transcript summarization prompt specifically.
 
-**No phases need deeper research.** All patterns are established, well-documented, and covered by high-confidence sources. Proceed directly to roadmap creation.
+Phases with standard patterns (skip research-phase):
+- **Phase 1:** Chrome MV3 extension architecture is thoroughly documented. WXT handles framework complexity. Message-passing and storage patterns are well-established in official docs.
+- **Phase 2:** Shadow DOM injection, transcript panel UI, and the Gemini proxy route all follow standard patterns documented in ARCHITECTURE.md.
+- **Phase 4:** Chrome Web Store publishing requirements are fully documented in official Chrome docs and PITFALLS.md checklist.
+
+---
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Official Auth.js, Drizzle, Vercel Postgres docs; Context7 library coverage; established 2026 patterns for Next.js 16 App Router |
-| Features | HIGH | Competitive analysis of Otter.ai, Tactiq, read-later apps; clear table stakes vs differentiators; anti-features well-researched |
-| Architecture | HIGH | Standard Next.js 16 App Router patterns; multiple community examples; official middleware and Server Component documentation |
-| Pitfalls | HIGH | Well-documented issues with clear symptoms and prevention; CVE tracking current; production experience reports across sources |
+| Stack | HIGH | WXT, `@google/genai`, and `gemini-2.5-flash` all verified against official docs and release dates. One low-confidence note: `gemini-3-flash-preview` appears in Google docs quickstart as a possible future alias — use `gemini-2.5-flash` until a new stable GA model is confirmed. |
+| Features | MEDIUM-HIGH | Competitor feature landscape from multiple independent 2026 sources. Official Chrome Summarizer API docs confirm AI summary UX patterns. Auth detection pattern sourced from next-auth community discussion (MEDIUM — community-validated but not official docs). |
+| Architecture | HIGH | MV3 architecture documented from official Chrome extension docs. Message-passing, Shadow DOM, and service worker patterns are well-established. CORS behavior of content scripts vs background SW confirmed by official Chromium security documentation. |
+| Pitfalls | HIGH | All pitfalls sourced from official Chrome docs, official Gemini rate limit docs, or Chrome Web Store review policy docs. Gemini rate limit reduction (December 2025) confirmed by multiple independent sources. |
 
 **Overall confidence:** HIGH
 
-Research covered all aspects with primary sources (official documentation, Context7 library), secondary validation (community examples, production reports), and tertiary cross-checking (competitive analysis, security advisories). No significant knowledge gaps.
-
 ### Gaps to Address
 
-**Minor gaps (handle during implementation):**
-- **Auto-save debounce tuning:** Research suggests 500-1000ms but optimal value depends on transcript fetch speed and user typing patterns. Start with 750ms, adjust based on monitoring.
-- **Pagination strategy for history page:** Research didn't specify ideal page size for transcript lists. Standard practice is 20-50 items; implement infinite scroll if users accumulate 100+ transcripts.
-- **Search implementation details:** Whether to use full-text search, simple LIKE queries, or client-side filtering depends on expected transcript volume. Start simple (Postgres ILIKE on title), upgrade if performance degrades.
+- **Gemini safety filter configuration:** The optimal `safetySettings` values for a transcript summarization prompt are not documented with specificity. Test against news, politics, medical, and gaming video categories during Phase 3 development. Build the error path before the success path.
+- **`yt-navigate-finish` stability:** YouTube's custom DOM event is the recommended navigation signal but could be renamed in a future YouTube update. The MutationObserver fallback mitigates this. Document the current event name in CLAUDE.md and flag it as something to monitor.
+- **CORS for `/api/auth/session`:** Background SW fetches to `host_permissions` domains bypass CORS, but verify this in practice for the session endpoint. Fallback if needed: add `chrome-extension://` to the CORS allowlist in Next.js config using an environment variable for the extension ID.
+- **Gemini model ID at implementation time:** `gemini-2.5-flash` is production-stable as of February 2026. Confirm the model ID is unchanged when beginning Phase 2 implementation.
 
-**These gaps are implementation details, not architectural unknowns.** Proceed with roadmap creation using research recommendations; validate assumptions during Phase 3 implementation.
+---
 
 ## Sources
 
-### Primary (HIGH confidence)
+### Primary (HIGH confidence — official documentation)
+- [WXT Official Documentation](https://wxt.dev/) — Framework overview, content scripts, Shadow Root pattern, HMR
+- [WXT GitHub Releases](https://github.com/wxt-dev/wxt/releases) — v0.20.17 latest stable, February 12, 2026
+- [Google Gemini API Libraries](https://ai.google.dev/gemini-api/docs/libraries) — `@google/genai` GA, deprecation of legacy SDK confirmed
+- [Chrome MV3 Content Scripts](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts) — Content script isolation, CORS behavior
+- [chrome.cookies API](https://developer.chrome.com/docs/extensions/reference/api/cookies) — Cookie permissions, host_permissions requirement
+- [Chrome Web Store Review Process](https://developer.chrome.com/docs/webstore/review-process/) — Review timeline, policy requirements
+- [Gemini API Rate Limits (Official)](https://ai.google.dev/gemini-api/docs/rate-limits) — Free tier limits post-December 2025
+- [Gemini API Safety Settings](https://ai.google.dev/gemini-api/docs/safety-settings) — Safety filter configuration
 
-**Context7 Library:**
-- Auth.js Next.js Documentation — Configuration patterns, middleware setup, session strategies
-- Drizzle ORM Vercel Tutorial — Setup guide, connection pooling, edge compatibility
-- @auth/drizzle-adapter Reference — Adapter configuration, schema requirements
-- Vercel Postgres Package — Connection setup, environment variables
+### Secondary (MEDIUM confidence — community consensus)
+- [2025 State of Browser Extension Frameworks](https://redreamality.com/blog/the-2025-state-of-browser-extension-frameworks-a-comparative-analysis-of-plasmo-wxt-and-crxjs/) — WXT vs Plasmo vs CRXJS analysis
+- [WXT + Tailwind v4 GitHub Issue #1460](https://github.com/wxt-dev/wxt/issues/1460) — Vite plugin path confirmed, PostCSS path broken
+- [Sharing next-auth authentication with a Chrome extension](https://github.com/nextauthjs/next-auth/discussions/6021) — Session detection via `/api/auth/session` endpoint
+- [Making Chrome Extension Smart for SPA Websites](https://medium.com/@softvar/making-chrome-extension-smart-by-supporting-spa-websites-1f76593637e8) — YouTube SPA navigation patterns
+- [TubeOnAI: 8 Best YouTube Transcript Chrome Extensions (2026)](https://tubeonai.com/youtube-video-transcription-chrome-extensions/) — Competitor feature landscape
+- [Gemini API Rate Limits Complete Guide 2026](https://blog.laozhang.ai/en/posts/gemini-api-rate-limits-guide) — December 2025 free tier reduction independently confirmed
 
-**Official Documentation:**
-- Auth.js Migration to v5 — Next.js 16 patterns, proxy.ts changes
-- Auth.js Session Strategies — JWT vs database sessions trade-offs
-- Next.js 16 App Router Authentication Guide — Middleware patterns, Server Component auth
-- Auth.js Google Provider Setup — OAuth configuration, callback URLs
-- Drizzle ORM Latest Releases — Version compatibility, feature availability
-
-### Secondary (MEDIUM confidence)
-
-**Competitive Analysis:**
-- Otter.ai YouTube Transcript Generator — 25 transcript limit, export formats, AI features
-- Tactiq YouTube Transcript — No sign-in approach, integration focus
-- EaseUS, HappyScribe, ScrapingDog — Feature comparisons, history management
-- Sonix, Meeting transcription tools — Tagging, filtering, search patterns
-- Pocket vs Instapaper — Organization patterns (tags vs folders), read-later UX
-
-**Technical Implementation:**
-- Prisma vs Drizzle 2026 comparison — Bundle size, edge performance, SQL control
-- Neon vs Supabase comparison — Database alternatives, connection pooling
-- Next.js Auth alternatives (Clerk, Better Auth, Lucia) — Ecosystem status
-- Vercel Postgres transition to Neon — Infrastructure backing
-
-### Tertiary (production reports and security)
-
-**Pitfalls and Issues:**
-- CVE-2025-29927 Next.js middleware bypass — Security advisory, patch versions
-- Next.js + NextAuth production issues — Environment variable errors, OAuth callback failures
-- Serverless connection pooling — Pool exhaustion patterns, prevention strategies
-- Auto-save race condition examples — React Query patterns, timestamp-based updates
-- Auth.js adapter schema mismatches — Database migration failures, field requirements
-
-**UX Patterns:**
-- Auto-save design patterns — User expectations, loading states, error handling
-- Read-later app pain points — Bulk operations, organization fatigue
-- Duplicate content UX — Detection strategies, user notifications
+### Tertiary (LOW confidence — single source or inference)
+- Gemini model naming: `gemini-3-flash-preview` appears in Google quickstart docs but may be a future preview alias — use `gemini-2.5-flash` for production until independently confirmed stable
 
 ---
-*Research completed: 2026-02-17*
+
+*Research completed: 2026-02-18*
 *Ready for roadmap: yes*

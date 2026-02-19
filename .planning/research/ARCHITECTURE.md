@@ -1,482 +1,604 @@
 # Architecture Research
 
-**Domain:** YouTube transcript tool with user accounts and persistent storage
-**Researched:** 2026-02-17
+**Domain:** Chrome Manifest V3 extension + AI summaries integration with existing Next.js app
+**Researched:** 2026-02-18
 **Confidence:** HIGH
 
-## Standard Architecture
+## System Overview
 
-### System Overview
+This milestone adds a Chrome extension that integrates with the existing TranscriptGrab web app. The extension injects UI into YouTube pages, uses the existing backend API, detects the user's session from the web app's cookies, and calls Gemini for AI summaries through a new backend proxy route.
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        Client Layer (React)                              │
-├─────────────────────────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐ │
-│  │ Home Page   │  │ History Page │  │ Auth Pages   │  │ Components   │ │
-│  │ (public)    │  │ (protected)  │  │ (public)     │  │ (shared UI)  │ │
-│  └──────┬──────┘  └──────┬───────┘  └──────┬───────┘  └──────────────┘ │
-│         │                │                  │                            │
-├─────────┴────────────────┴──────────────────┴────────────────────────────┤
-│                        Middleware Layer                                  │
-│  ┌────────────────────────────────────────────────────────────────────┐ │
-│  │  middleware.ts (renamed from proxy.ts in Next.js 16+)              │ │
-│  │  - Session validation via Auth.js                                  │ │
-│  │  - Route protection (redirect logic)                               │ │
-│  │  - Optimistic auth checks (encrypted cookie)                       │ │
-│  └────────────────────────────────────────────────────────────────────┘ │
-├─────────────────────────────────────────────────────────────────────────┤
-│                        API Route Layer                                   │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │
-│  │ /api/        │  │ /api/        │  │ /api/auth/   │                  │
-│  │ transcript   │  │ metadata     │  │ [...nextauth]│                  │
-│  │              │  │              │  │ (Auth.js)    │                  │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘                  │
-│         │                  │                  │                          │
-├─────────┴──────────────────┴──────────────────┴──────────────────────────┤
-│                        Business Logic Layer                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐                  │
-│  │ lib/youtube  │  │ lib/format   │  │ lib/db       │                  │
-│  │ (fetching)   │  │ (transform)  │  │ (Drizzle)    │                  │
-│  └──────────────┘  └──────────────┘  └──────┬───────┘                  │
-│                                              │                           │
-├──────────────────────────────────────────────┴───────────────────────────┤
-│                        Data Layer                                        │
-│  ┌───────────────────────────────────────────────────────────────────┐  │
-│  │  Vercel Postgres (via @vercel/postgres + Drizzle ORM)             │  │
-│  │  - users (Auth.js adapter)                                         │  │
-│  │  - accounts (OAuth data)                                           │  │
-│  │  - sessions (optional, for database strategy)                      │  │
-│  │  - transcripts (user history)                                      │  │
-│  └───────────────────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────────────────┐
+│                        Chrome Extension Layer                                 │
+├──────────────────────────────────────────────────────────────────────────────┤
+│  ┌──────────────────┐   ┌──────────────────┐   ┌─────────────────────────┐  │
+│  │  Content Script  │   │  Background SW   │   │  Extension Popup        │  │
+│  │  (youtube.com)   │   │  (service worker)│   │  (optional settings UI) │  │
+│  │  - Inject button │   │  - Fetch proxy   │   │  - Auth status display  │  │
+│  │  - Inject panel  │   │  - Cookie check  │   │  - Quick link to webapp │  │
+│  │  - DOM observe   │   │  - Message relay │   │                         │  │
+│  └────────┬─────────┘   └────────┬─────────┘   └─────────────────────────┘  │
+│           │  chrome.runtime.sendMessage  │                                    │
+│           └──────────────────────────────┘                                   │
+├──────────────────────────────────────────────────────────────────────────────┤
+│                        Existing Next.js Web App (Vercel)                      │
+├──────────────────────────────────────────────────────────────────────────────┤
+│  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐  ┌───────────────┐ │
+│  │ /api/         │  │ /api/         │  │ /api/         │  │ /api/auth/    │ │
+│  │ transcript    │  │ metadata      │  │ summarize     │  │ [...nextauth] │ │
+│  │ (CORS-open)   │  │ (CORS-open)   │  │ (NEW, CORS)   │  │               │ │
+│  └───────┬───────┘  └───────┬───────┘  └───────┬───────┘  └───────┬───────┘ │
+│          │                  │                  │                   │          │
+├──────────┴──────────────────┴──────────────────┴───────────────────┴──────────┤
+│                        Business Logic + Data Layer                            │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐ │
+│  │ lib/youtube  │  │ lib/format   │  │ lib/db       │  │ Gemini API       │ │
+│  │ (unchanged)  │  │ (unchanged)  │  │ (Drizzle)    │  │ (server-side key)│ │
+│  └──────────────┘  └──────────────┘  └──────────────┘  └──────────────────┘ │
+└──────────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Component Responsibilities
+## Extension Architecture: Three-Part Structure
 
-| Component | Responsibility | Typical Implementation |
-|-----------|----------------|------------------------|
-| **middleware.ts** | Session validation and route protection | Auth.js `auth()` export as middleware; checks encrypted session cookie; redirects unauthenticated users from protected routes |
-| **auth.ts** | NextAuth.js configuration | Exports `handlers`, `auth`, `signIn`, `signOut`; configures Google OAuth provider; sets up Drizzle adapter; defines JWT/session callbacks |
-| **/api/auth/[...nextauth]/route.ts** | Auth.js HTTP handlers | Imports `handlers` from `auth.ts` and exports as `GET` and `POST` route handlers |
-| **/api/transcript/route.ts** | Transcript fetching + optional saving | Fetches transcript via existing logic; if user authenticated, saves to DB with `userId` FK; returns transcript data |
-| **lib/db/index.ts** | Database client initialization | Drizzle instance initialized with `drizzle()` from `drizzle-orm/vercel-postgres`; auto-detects `POSTGRES_URL` from env |
-| **lib/db/schema.ts** | Database schema definitions | Drizzle `pgTable` definitions for users, accounts, sessions (Auth.js adapter), and transcripts (custom) |
-| **app/history/page.tsx** | Protected history page | Server Component that calls `auth()` to verify session; queries user's transcripts from DB; displays list with metadata |
-| **Home page (app/page.tsx)** | Public transcript tool interface | Existing client component; no auth required; optionally shows "Save" UI if user authenticated |
+Every MV3 extension has three distinct execution environments that cannot directly access each other's DOM or state:
+
+| Component | Where It Runs | What It Can Do | Limitations |
+|-----------|--------------|----------------|-------------|
+| **Content Script** | YouTube page context | Read/modify YouTube DOM, inject UI elements | Cannot access chrome.cookies; has isolated JS scope; fetch calls go to its own domain (CORS applies) |
+| **Background Service Worker** | Browser background | Access chrome.cookies, chrome.storage, make cross-origin fetches, relay messages | No DOM access; ephemeral (terminates after idle); no persistent state |
+| **Popup / Options** | Extension popup window | Show settings/status UI | Fresh page load each open; use chrome.storage for state |
+
+**Communication pattern:** Content script sends messages to background service worker via `chrome.runtime.sendMessage()`. Background worker performs privileged operations and returns results.
+
+## Component Responsibilities
+
+| Component | Responsibility | Key APIs |
+|-----------|---------------|----------|
+| **Content Script** | Detect YouTube video page, inject button into player controls, inject transcript panel above description, listen for SPA navigation, relay fetch requests to background | `MutationObserver`, `chrome.runtime.sendMessage`, DOM manipulation |
+| **Background Service Worker** | Proxy API calls to TranscriptGrab backend with credentials, check session status via cookie API, store session state in chrome.storage, handle tab messages | `chrome.cookies`, `chrome.storage.local`, `chrome.runtime.onMessage`, `fetch` with credentials |
+| **manifest.json** | Declare permissions, host_permissions, content_scripts match patterns, service worker entry | Static config — no code |
 
 ## Recommended Project Structure
 
 ```
-app/
-├── api/
-│   ├── auth/
-│   │   └── [...nextauth]/
-│   │       └── route.ts          # Auth.js route handlers (GET/POST)
-│   ├── transcript/
-│   │   └── route.ts              # Enhanced with DB save logic
-│   └── metadata/
-│       └── route.ts              # Unchanged (video metadata)
-├── history/
-│   └── page.tsx                  # NEW: Protected page showing user's transcript history
-├── page.tsx                      # Existing home page (public)
-└── layout.tsx                    # Existing root layout
+extension/                           # Separate directory at repo root (or sibling repo)
+├── manifest.json                    # MV3 manifest
+├── src/
+│   ├── content/
+│   │   ├── index.ts                 # Content script entry — YouTube injection
+│   │   ├── inject-button.ts         # Button injection into player controls
+│   │   ├── inject-panel.ts          # Transcript panel injection
+│   │   ├── navigation-observer.ts   # YouTube SPA navigation detection
+│   │   └── styles.css               # Isolated panel styles (shadow DOM)
+│   ├── background/
+│   │   ├── service-worker.ts        # SW entry — message handler
+│   │   ├── api-client.ts            # Fetches to TranscriptGrab API with credentials
+│   │   └── session.ts               # Cookie-based session detection
+│   ├── popup/
+│   │   ├── popup.html               # Extension popup page
+│   │   └── popup.ts                 # Popup logic (show auth status, settings)
+│   └── shared/
+│       └── types.ts                 # Message types, shared interfaces
+├── public/
+│   └── icons/                       # Extension icons (16, 48, 128px)
+├── package.json                     # WXT project config
+└── wxt.config.ts                    # WXT configuration
+```
 
-lib/
-├── db/
-│   ├── index.ts                  # NEW: Drizzle client instance
-│   └── schema.ts                 # NEW: Auth.js adapter tables + transcripts table
-├── youtube.ts                    # Existing transcript fetching logic
-├── format.ts                     # Existing formatting utilities
-└── types.ts                      # Extended with DB types
-
-middleware.ts                     # NEW: Auth.js middleware for route protection
-auth.ts                           # NEW: NextAuth.js configuration
-drizzle.config.ts                 # NEW: Drizzle Kit configuration for migrations
+**Web App additions (in existing Next.js project):**
+```
+app/api/
+└── summarize/
+    └── route.ts                     # NEW: Gemini proxy (auth-optional or auth-required)
 ```
 
 ### Structure Rationale
 
-- **lib/db/**: Centralized database concerns; schema and client instance separate for clarity
-- **middleware.ts**: Standard Next.js 16 pattern for route-level auth checks (previously `proxy.ts` in beta releases)
-- **app/history/**: Protected route for authenticated users; Next.js convention for route-based organization
-- **auth.ts at root**: Auth.js v5 convention; exports consumed by middleware and API routes
+- **extension/ at repo root:** Extension is a distinct build artifact; shares no build pipeline with Next.js; keeping it in the same repo enables shared type definitions if needed
+- **content/ subdirectory:** Split content script logic into focused files — injection, panel, SPA observer — to keep each file testable and under 200 lines
+- **background/session.ts:** Session logic isolated from API client; background worker checks cookie, stores result in chrome.storage, content script reads from storage
+- **WXT framework:** Use WXT over vanilla manifest + bundler. WXT provides HMR during development, Vite bundling, auto-imports, and proper TypeScript support. Plasmo is in maintenance mode as of 2025. CRXJS has limited activity. WXT is the current community standard.
 
 ## Architectural Patterns
 
-### Pattern 1: Optional Authentication (Public Tool + Protected Features)
+### Pattern 1: Message-Passing for Privileged Operations
 
-**What:** Allow unauthenticated users to use the transcript tool while offering authenticated users additional features (save history, view saved transcripts).
+**What:** Content scripts delegate any operation requiring elevated permissions (cookie access, cross-origin fetches with credentials) to the background service worker via `chrome.runtime.sendMessage()`.
 
-**When to use:** When core functionality should be public but premium/convenience features require an account.
+**When to use:** Any time the content script needs to call the TranscriptGrab API, check session status, or access chrome.cookies.
 
 **Trade-offs:**
-- **Pro:** Low barrier to entry; users can try the tool before creating an account
-- **Pro:** Simpler onboarding flow
-- **Con:** Need to handle both authenticated and unauthenticated states in UI/API
-- **Con:** Unauthenticated users can't access history
+- Adds async message-passing overhead (negligible for this use case)
+- Keeps content script sandboxed — cannot be used to exfiltrate cookies by injected page scripts
+- Background service worker can be inspected separately in DevTools
 
 **Example:**
 ```typescript
-// app/api/transcript/route.ts
-import { auth } from '@/auth';
-import { db } from '@/lib/db';
-import { transcripts } from '@/lib/db/schema';
+// content/index.ts
+async function fetchTranscript(videoId: string): Promise<TranscriptResult> {
+  return chrome.runtime.sendMessage({
+    type: 'FETCH_TRANSCRIPT',
+    payload: { videoId, languageCode: 'en' },
+  });
+}
 
-export async function POST(request: NextRequest) {
-  const session = await auth();
-  const { url, languageCode } = await request.json();
-
-  // Fetch transcript (works for all users)
-  const data = await fetchTranscript(videoId, languageCode);
-
-  // Optionally save to DB if user is authenticated
-  if (session?.user?.id) {
-    await db.insert(transcripts).values({
-      userId: session.user.id,
-      videoId,
-      videoTitle: metadata?.title,
-      languageCode: data.selectedLanguage,
-      segments: JSON.stringify(data.segments),
-      createdAt: new Date(),
-    });
+// background/service-worker.ts
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === 'FETCH_TRANSCRIPT') {
+    handleFetchTranscript(message.payload).then(sendResponse);
+    return true; // Required: keeps message channel open for async response
   }
+});
 
-  return NextResponse.json({ success: true, data });
+async function handleFetchTranscript({ videoId, languageCode }: { videoId: string; languageCode: string }) {
+  const response = await fetch('https://transcriptgrab.com/api/transcript', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include', // Sends auth cookies automatically (host_permissions required)
+    body: JSON.stringify({ url: `https://youtu.be/${videoId}`, languageCode }),
+  });
+  return response.json();
 }
 ```
 
-### Pattern 2: Middleware-Based Route Protection
+### Pattern 2: Shadow DOM for UI Injection
 
-**What:** Use Next.js middleware with Auth.js `auth()` to protect routes before they render.
+**What:** Inject extension UI elements using Shadow DOM to prevent YouTube's CSS from bleeding into the extension's panel and vice versa.
 
-**When to use:** When you need optimistic auth checks for protected pages (like `/history`).
+**When to use:** All injected UI — transcript panel, button overlay. Not needed for elements appended to YouTube's own control bar using their native classes.
 
 **Trade-offs:**
-- **Pro:** Centralized route protection logic
-- **Pro:** Fast redirects (happens at edge/middleware layer)
-- **Con:** Middleware runs on every request (use matcher to limit scope)
-- **Con:** Cannot access request body in middleware (only headers/cookies)
+- Complete CSS isolation — YouTube's aggressive style overrides cannot affect extension panel
+- Shadow DOM elements are not accessible to page's own JavaScript (intentional)
+- Slightly more complex DOM setup than a bare `div`
+- Custom styles must be injected into the shadow root, not the page `<head>`
 
 **Example:**
 ```typescript
-// middleware.ts
-import { auth } from '@/auth';
-import { NextResponse } from 'next/server';
+// content/inject-panel.ts
+export function injectTranscriptPanel(anchorEl: Element): ShadowRoot {
+  const host = document.createElement('div');
+  host.id = 'transcriptgrab-panel-host';
 
-export default auth((req) => {
-  const isProtectedRoute = req.nextUrl.pathname.startsWith('/history');
+  const shadow = host.attachShadow({ mode: 'closed' }); // 'closed' prevents page JS access
 
-  if (isProtectedRoute && !req.auth) {
-    return NextResponse.redirect(new URL('/api/auth/signin', req.url));
-  }
+  // Inject styles directly into shadow root
+  const style = document.createElement('style');
+  style.textContent = `
+    :host { display: block; ... }
+    .panel { background: #0f0f0f; ... }
+  `;
+  shadow.appendChild(style);
 
-  return NextResponse.next();
-});
+  const panel = document.createElement('div');
+  panel.className = 'panel';
+  shadow.appendChild(panel);
 
-export const config = {
-  matcher: ['/((?!api|_next/static|_next/image|.*\\.png$).*)'],
-};
+  anchorEl.insertAdjacentElement('afterend', host);
+  return shadow;
+}
 ```
 
-### Pattern 3: Database Session Strategy vs JWT Strategy
+### Pattern 3: YouTube SPA Navigation Detection
 
-**What:** Auth.js supports two session strategies: JWT (stateless, cookie-based) or database (server-side, requires sessions table).
+**What:** YouTube is a Single Page Application. The content script only runs on initial page load. Navigation between videos updates the URL via the History API without reloading the page, so the content script must actively observe navigation to re-inject UI on each new video.
 
-**When to use:**
-- **JWT**: Default; works on Edge Runtime; no DB queries for session verification; good for most use cases
-- **Database**: Needed for session revocation, single sign-out across devices, or regulatory compliance
+**When to use:** Any content script targeting YouTube (or any SPA).
 
 **Trade-offs:**
+- MutationObserver approach watches DOM; more resilient but more events to filter
+- `youtube-navigate-finish` custom event is YouTube-specific and may break with YouTube updates
+- `chrome.webNavigation.onHistoryStateUpdated` (in background SW) is the most reliable — fires on every SPA navigation and provides tabId + new URL
 
-| Aspect | JWT Strategy | Database Strategy |
-|--------|-------------|------------------|
-| **Performance** | Faster (no DB query per request) | Slower (DB query required) |
-| **Revocation** | Cannot revoke until expiry | Can revoke immediately |
-| **Edge Runtime** | ✅ Supported | ❌ Not supported (requires DB access) |
-| **Session Table** | Not required | Required |
-| **Scale** | Better for high traffic | Requires DB scaling |
+**Recommended approach:** Listen to `yt-navigate-finish` in the content script as the primary signal (YouTube fires this custom DOM event reliably), with a `MutationObserver` fallback watching for `#secondary` or `#description` to appear.
 
-**Recommendation for this project:** Use JWT strategy (default). The app is deployed to Vercel Edge, and immediate session revocation is not a critical requirement.
+**Example:**
+```typescript
+// content/navigation-observer.ts
+export function observeNavigation(onVideoChange: (videoId: string) => void) {
+  // Primary: YouTube fires this custom event on each navigation
+  document.addEventListener('yt-navigate-finish', () => {
+    const videoId = new URLSearchParams(window.location.search).get('v');
+    if (videoId) onVideoChange(videoId);
+  });
+
+  // Fallback: MutationObserver watches for description element
+  // which appears after YouTube renders a new video page
+  const observer = new MutationObserver(() => {
+    const videoId = new URLSearchParams(window.location.search).get('v');
+    if (videoId && document.querySelector('#description')) {
+      observer.disconnect();
+      onVideoChange(videoId);
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+```
+
+### Pattern 4: Cookie-Based Session Detection
+
+**What:** The extension detects whether the user is signed into TranscriptGrab by reading the Auth.js session cookie from the web app domain. Auth.js v5 with JWT strategy sets `__Secure-authjs.session-token` (in production) or `authjs.session-token` (in development) as an httpOnly cookie.
+
+**When to use:** Before showing save-to-history UI; before making authenticated API calls.
+
+**Critical constraint:** The session cookie is httpOnly, so it cannot be read by JavaScript via `document.cookie`. However, the Chrome extensions `chrome.cookies` API CAN read httpOnly cookies, as it is a browser-level API, not a JS API. The extension must declare the `cookies` permission and `host_permissions` for the web app domain.
+
+**Alternative approach (simpler):** Instead of reading the cookie directly, make a credentialed GET request from the background SW to `/api/auth/session`. Auth.js returns `{}` if not authenticated, or `{ user: {...} }` if authenticated. This avoids interpreting encrypted cookie values.
+
+**Recommended:** Use the `/api/auth/session` endpoint approach. The cookie value is encrypted JWT — the extension cannot decode it without the `AUTH_SECRET`. The session endpoint decodes it server-side and returns structured data.
+
+**Example:**
+```typescript
+// background/session.ts
+export async function checkSession(): Promise<{ userId: string; email: string } | null> {
+  try {
+    const response = await fetch('https://transcriptgrab.com/api/auth/session', {
+      credentials: 'include', // Sends the authjs.session-token cookie
+      headers: { 'Content-Type': 'application/json' },
+    });
+    const data = await response.json();
+    if (data?.user?.id) {
+      await chrome.storage.local.set({ session: data.user });
+      return data.user;
+    }
+  } catch {
+    // Network error or not signed in
+  }
+  await chrome.storage.local.remove('session');
+  return null;
+}
+```
+
+**CORS requirement:** The Next.js `/api/auth/session` endpoint must allow `chrome-extension://` origins for this to work. See Integration Points below.
 
 ## Data Flow
 
-### Request Flow: Authenticated User Fetches Transcript
+### Flow 1: User on YouTube, Clicks "Get Transcript"
 
 ```
-[User enters YouTube URL]
+[User on youtube.com/watch?v=XYZ]
     ↓
-[Client: app/page.tsx] → POST /api/transcript
+[Content Script: navigation-observer detects video page]
     ↓
-[API Route] → auth() to check session
+[Content Script: inject-button.ts injects button into #movie_player .ytp-right-controls]
+[Content Script: checks chrome.storage.local for cached session]
     ↓
-[lib/youtube.ts] → fetchTranscript(videoId) → InnerTube API / Supadata fallback
+[User clicks button]
     ↓
-[API Route] → db.insert(transcripts) if authenticated
+[Content Script → Background SW: sendMessage({ type: 'FETCH_TRANSCRIPT', videoId: 'XYZ' })]
     ↓
-[Response] ← JSON with transcript data
+[Background SW: fetch POST https://transcriptgrab.com/api/transcript, credentials: 'include']
     ↓
-[Client] ← Displays transcript + "Saved to history" message
+[TranscriptGrab API: fetches via InnerTube/Supadata, saves to DB if user authenticated]
+    ↓
+[Background SW → Content Script: sendResponse(transcriptData)]
+    ↓
+[Content Script: inject-panel.ts renders transcript in Shadow DOM panel above description]
 ```
 
-### Request Flow: User Views History Page
+### Flow 2: AI Summary Request
 
 ```
-[User navigates to /history]
+[User clicks "Summarize" in injected panel]
     ↓
-[Middleware] → auth() checks session → redirects if unauthenticated
+[Content Script → Background SW: sendMessage({ type: 'SUMMARIZE', segments: [...] })]
     ↓
-[Server Component: app/history/page.tsx] → auth() gets userId
+[Background SW: fetch POST https://transcriptgrab.com/api/summarize, credentials: 'include']
     ↓
-[Drizzle Query] → db.select().from(transcripts).where(eq(transcripts.userId, userId))
+[/api/summarize: calls Gemini API with GEMINI_API_KEY (server-side env var), returns summary]
     ↓
-[Response] ← SSR rendered page with transcript list
+[Background SW → Content Script: sendResponse({ summary: '...' })]
     ↓
-[Client] ← Displays history with video titles, timestamps, actions
+[Content Script: renders summary in panel]
 ```
 
-### Authentication Flow: Google OAuth Sign-In
+### Flow 3: Auth Detection on Extension Load
 
 ```
-[User clicks "Sign in with Google"]
+[Extension installed / browser starts]
     ↓
-[signIn("google")] → /api/auth/signin/google
+[Background SW: checkSession() → GET https://transcriptgrab.com/api/auth/session, credentials: include]
     ↓
-[Auth.js] → Redirects to Google OAuth consent screen
+[Auth.js reads httpOnly cookie, decodes JWT, returns session JSON or {}]
     ↓
-[Google] → User authorizes → Callback to /api/auth/callback/google
+[Background SW: stores { userId, email } in chrome.storage.local]
     ↓
-[Auth.js] → Verifies OAuth code → Fetches user profile from Google
-    ↓
-[Drizzle Adapter] → Upserts user in DB (users + accounts tables)
-    ↓
-[Auth.js] → Creates session (JWT or DB) → Sets httpOnly cookie
-    ↓
-[Client] ← Redirects to home page (authenticated)
+[Content Script (on YouTube): reads chrome.storage.local to show/hide "Save" UI]
 ```
 
-### State Management
+## Gemini API Integration: Backend Proxy (Required)
 
-**Client State (React):**
-- Transcript data (segments, metadata, selected language)
-- UI state (loading, error, timestamps toggle)
-- **No auth state management needed** — Auth.js handles session via server-side `auth()`
+**Decision: Gemini API calls must go through the Next.js backend, never directly from the extension.**
 
-**Server State:**
-- Session validation (Auth.js middleware + `auth()` calls)
-- Database queries (Drizzle ORM)
-- No global state — each Server Component calls `auth()` independently
+Rationale:
+- Exposing `GEMINI_API_KEY` in extension code is a critical security vulnerability — extension source is fully inspectable
+- Chrome Web Store review may flag extensions with API keys in source
+- Backend proxy enables rate limiting per user, usage tracking, and key rotation
+- The backend proxy adds ~50-100ms latency which is acceptable for summarization (non-streaming use case)
 
-**Key Data Flows:**
+**New route to create:** `app/api/summarize/route.ts`
 
-1. **Session validation:** Middleware → encrypted cookie → `auth()` → session object
-2. **Transcript persistence:** API route → Drizzle insert → Postgres
-3. **History retrieval:** Server Component → `auth()` → Drizzle query → SSR render
+```typescript
+// app/api/summarize/route.ts
+import { NextRequest, NextResponse } from 'next/server';
+import { GoogleGenAI } from '@google/genai';
+
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+
+export async function POST(request: NextRequest) {
+  const { segments, videoTitle } = await request.json();
+
+  // Optional: check auth if summary is a premium feature
+  // const session = await auth();
+
+  const plainText = segments.map((s: { text: string }) => s.text).join(' ');
+
+  const result = await ai.models.generateContent({
+    model: 'gemini-2.0-flash-lite', // Best price/speed for summarization
+    contents: [
+      {
+        role: 'user',
+        parts: [{ text: `Summarize this YouTube video transcript concisely in 3-5 bullet points.\n\nTitle: ${videoTitle}\n\nTranscript:\n${plainText}` }],
+      },
+    ],
+  });
+
+  return NextResponse.json({ summary: result.text });
+}
+```
+
+**Model choice:** `gemini-2.0-flash-lite` — optimized for speed and cost on text summarization tasks. Free tier: 15 RPM, 1,000 RPD. Sufficient for early usage.
+
+**Package:** `@google/genai` (the new unified SDK, replacing `@google/generative-ai`).
+
+## CORS Configuration for Extension Access
+
+The existing API routes are same-origin only. The extension must be added as an allowed origin.
+
+**Problem:** The extension's origin is `chrome-extension://<EXTENSION_ID>/`. The ID is different in development (unpacked) vs production (Chrome Web Store).
+
+**Solution:** Add CORS headers to the API routes the extension calls (`/api/transcript`, `/api/metadata`, `/api/summarize`, `/api/auth/session`). Use an environment variable for allowed extension IDs.
+
+```typescript
+// middleware.ts (or per-route)
+const ALLOWED_ORIGINS = [
+  'https://transcriptgrab.com',
+  process.env.EXTENSION_ORIGIN_DEV,    // chrome-extension://dev-id/
+  process.env.EXTENSION_ORIGIN_PROD,   // chrome-extension://prod-id/
+].filter(Boolean);
+
+function getCorsHeaders(origin: string | null) {
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    return {
+      'Access-Control-Allow-Origin': origin,
+      'Access-Control-Allow-Credentials': 'true',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
+  }
+  return {};
+}
+```
+
+**Note on credentials:** `Access-Control-Allow-Credentials: true` requires `Access-Control-Allow-Origin` to be a specific origin (not `*`). This is why per-request origin checking is necessary.
+
+**Alternative (simpler for development):** Background service worker fetches bypass CORS entirely when the target domain is in `host_permissions`. Fetches from the background SW to listed host_permissions domains do not go through CORS preflight. This means CORS config is only needed for content script fetches (which should be proxied to background SW anyway).
+
+**Revised recommendation:** Route ALL API calls from the extension through the background service worker (not content scripts directly). Background SW fetches to `host_permissions` domains bypass CORS. This eliminates the need to modify CORS headers on the existing API routes. Only the `/api/auth/session` check needs CORS awareness since it uses `credentials: include`.
+
+## manifest.json Configuration
+
+```json
+{
+  "manifest_version": 3,
+  "name": "TranscriptGrab",
+  "version": "2.0.0",
+  "description": "Get YouTube transcripts instantly, powered by TranscriptGrab",
+  "permissions": [
+    "storage",
+    "cookies"
+  ],
+  "host_permissions": [
+    "https://www.youtube.com/*",
+    "https://transcriptgrab.com/*",
+    "http://localhost:3000/*"
+  ],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.youtube.com/watch*"],
+      "js": ["content/index.js"],
+      "css": ["content/styles.css"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  }
+}
+```
+
+**Key decisions:**
+- `document_idle` for content script: YouTube's player controls exist in DOM by idle state
+- No `webNavigation` permission: Use `yt-navigate-finish` DOM event inside content script instead (avoids needing background tab tracking)
+- `cookies` permission: Required for `chrome.cookies` API if using direct cookie reads (not needed if using the session endpoint approach)
+- `host_permissions` for `transcriptgrab.com`: Enables credentialed fetches from background SW without CORS issues
+
+## YouTube DOM Injection Points
+
+YouTube's DOM structure for injection targets (as of 2026 — verify these selectors before building):
+
+| UI Element | Insertion Target | Method |
+|------------|-----------------|--------|
+| **Transcript button** | `.ytp-right-controls` inside `#movie_player` | `insertBefore()` with a custom button styled to match YT controls |
+| **Transcript panel** | `#secondary` (right column) or above `#description` | `prepend()` inside `#secondary` or `insertAdjacentElement('beforebegin', descriptionEl)` |
+| **Loading indicator** | Inside the injected panel's Shadow DOM | Internal to panel component |
+
+**YouTube SPA reality:** The selectors above exist after `yt-navigate-finish` fires. Do NOT try to inject before this event. On initial page load, use `document_idle` + wait for `#movie_player` to be present via `MutationObserver`.
+
+## Component Build Order
+
+Build in this order to minimize dependency blockers:
+
+### Step 1: Backend Gemini Proxy (1-2 days)
+Create `/api/summarize/route.ts` in the existing Next.js app. Test with curl. Confirm `gemini-2.0-flash-lite` works for transcript summarization.
+
+**Why first:** Establishes the only new backend endpoint. Everything else in the extension calls pre-existing API routes.
+
+### Step 2: Extension Scaffold with WXT (0.5 days)
+Initialize WXT project in `extension/`. Configure `wxt.config.ts` with React + TypeScript. Set up `manifest.json` with correct permissions. Confirm extension loads in Chrome with no errors.
+
+**Why second:** Scaffold must exist before writing content scripts or background worker.
+
+### Step 3: Background Service Worker + Session Detection (1-2 days)
+Implement `background/session.ts` (session check via `/api/auth/session`). Implement `background/api-client.ts` (proxied fetch to `/api/transcript` and `/api/summarize`). Implement `background/service-worker.ts` message handler.
+
+**Why third:** Content script depends on this being functional for all API calls.
+
+### Step 4: Content Script — Navigation + Button (1-2 days)
+Implement `navigation-observer.ts`. Implement `inject-button.ts` — find correct YouTube DOM target, inject button, wire click to message send. Test on multiple video page navigations.
+
+**Why fourth:** Navigation detection + button injection are prerequisites for the panel.
+
+### Step 5: Content Script — Transcript Panel (2-3 days)
+Implement `inject-panel.ts` with Shadow DOM. Build panel UI — transcript segments list, copy button, timestamps toggle. Wire up to transcript data from background SW response.
+
+**Why fifth:** Panel is the primary user-facing feature; requires button to trigger it.
+
+### Step 6: AI Summary UI in Panel (1 day)
+Add "Summarize" button to panel. Wire to background SW `SUMMARIZE` message. Display summary in panel below transcript.
+
+**Why last:** Purely additive feature; panel must exist first.
+
+## Anti-Patterns
+
+### Anti-Pattern 1: Gemini API Key in Extension Source
+
+**What people do:** Call Gemini directly from the content script or background SW with the API key hardcoded or in environment variables bundled into the extension.
+
+**Why it's wrong:** Extension source is fully readable. Any user who installs the extension can extract the API key from the bundle. Chrome Web Store reviewers flag this. Key rotation becomes necessary immediately.
+
+**Do this instead:** Route all Gemini calls through `/api/summarize` on the backend. Key lives in Vercel environment variables only.
+
+### Anti-Pattern 2: Fetching from Content Script Directly
+
+**What people do:** Make `fetch()` calls to the TranscriptGrab API directly from the content script.
+
+**Why it's wrong:** Content scripts run in the context of YouTube, so CORS headers for `youtube.com` apply. The TranscriptGrab API doesn't need to allow YouTube as an origin. Even with CORS configured, `credentials: include` requires specific origin (not wildcard), and YouTube pages are not in the allowed origin list.
+
+**Do this instead:** Send a message to the background service worker, which makes the fetch. Background SW fetches to domains in `host_permissions` bypass CORS entirely.
+
+### Anti-Pattern 3: Relying on Static YouTube Selectors
+
+**What people do:** Hard-code `.ytp-right-controls` or `#secondary` selectors and assume they are stable.
+
+**Why it's wrong:** YouTube frequently A/B tests UI changes. Selectors change without notice. Extensions break silently with no error message to users.
+
+**Do this instead:** Use multiple selector fallbacks with `querySelector` chained. Log selector misses to `chrome.storage` for debugging. Add a MutationObserver timeout that shows a "Could not find player controls" message in the popup after 5 seconds if injection fails.
+
+### Anti-Pattern 4: Storing Session Token Value
+
+**What people do:** Read and store the raw Auth.js session cookie value (`__Secure-authjs.session-token`) in `chrome.storage.local`.
+
+**Why it's wrong:** This is an encrypted JWT that the extension cannot decode without `AUTH_SECRET`. Storing it gives you nothing useful. The value changes on session refresh.
+
+**Do this instead:** Store the decoded session data (userId, email, name) from the `/api/auth/session` JSON response. Re-fetch the session endpoint when the extension needs fresh auth state.
+
+### Anti-Pattern 5: Persistent Background Page Pattern from MV2
+
+**What people do:** Write extension background code assuming it persists forever (like MV2 background pages). Store state in module-level variables.
+
+**Why it's wrong:** MV3 background scripts are service workers. They terminate after ~30 seconds of inactivity. All module-level state is lost. Next message wakes a fresh SW instance.
+
+**Do this instead:** Persist any state that must survive SW termination to `chrome.storage.local`. Re-initialize from storage at the start of each message handler.
+
+## Integration Points
+
+### Extension → Existing API Routes (No Changes Required)
+
+| Route | Method | Caller | Credentials | Change Needed |
+|-------|--------|--------|-------------|---------------|
+| `/api/transcript` | POST | Background SW | `include` (optional, saves if authed) | None — already works |
+| `/api/metadata` | GET | Background SW | None required | None |
+
+### Extension → New API Route
+
+| Route | Method | Caller | Auth | Change Needed |
+|-------|--------|--------|------|---------------|
+| `/api/summarize` | POST | Background SW | Optional (or required) | Create new route |
+
+### Extension → Auth.js Session Endpoint
+
+| Route | Method | Caller | Note |
+|-------|--------|--------|------|
+| `/api/auth/session` | GET | Background SW | Works with `credentials: include`; no CORS change needed when called from background SW (host_permissions bypass) |
+
+### New vs Modified Files
+
+**New (Next.js web app):**
+- `app/api/summarize/route.ts` — Gemini proxy endpoint
+
+**New (Extension — separate build):**
+- `extension/` — entire new directory, new build system (WXT + Vite)
+- All extension files are net new; no shared code with Next.js
+
+**Modified (Next.js web app):**
+- `next.config.ts` — potentially add CORS headers if content scripts call API directly (avoided if all calls go through background SW)
+- `.env` / Vercel env vars — add `GEMINI_API_KEY`
+
+**Unchanged:**
+- `lib/youtube.ts` — extension uses the API, not this lib directly
+- `lib/format.ts` — extension uses the API response; may duplicate a subset of formatting locally for display
+- `auth.ts`, `lib/db/` — no changes needed; extension uses the existing session endpoint
 
 ## Scaling Considerations
 
 | Scale | Architecture Adjustments |
 |-------|--------------------------|
-| **0-10k users** | Current architecture is sufficient; JWT sessions; single Postgres instance on Vercel |
-| **10k-100k users** | Add DB indexes on `transcripts.userId` and `transcripts.createdAt`; consider caching frequently accessed transcripts in Redis/KV |
-| **100k+ users** | Move to connection pooling (PgBouncer); separate read replicas for history queries; consider CDN caching for popular video transcripts |
+| **0-10k daily users** | Current architecture sufficient; Gemini free tier (1,000 RPD) handles ~1,000 summaries/day |
+| **10k-100k daily users** | Move to Gemini paid tier; add per-user rate limiting on `/api/summarize`; cache summaries by `videoId` in DB to avoid duplicate Gemini calls |
+| **100k+ daily users** | Gemini key rotation (like existing Supadata pattern); Redis cache for summaries; summary pre-generation for popular videos |
 
-### Scaling Priorities
+### First Bottleneck
 
-1. **First bottleneck:** Database connection limits
-   - **Fix:** Vercel Postgres has connection pooling built-in; for higher scale, use PgBouncer or Neon/Supabase with serverless connection pooling
+Gemini free tier rate limits (15 RPM, 1,000 RPD). Hit quickly if the extension becomes popular. Mitigation: cache summaries in the `transcripts` DB table — if a video has been summarized before, return cached result instead of calling Gemini.
 
-2. **Second bottleneck:** Transcript fetching rate limits (InnerTube/Supadata)
-   - **Fix:** Cache transcripts in DB by `videoId`; check if transcript exists before fetching externally; serve cached version for popular videos
+### Second Bottleneck
 
-## Anti-Patterns
-
-### Anti-Pattern 1: Client-Side Session Checks
-
-**What people do:** Use `useSession()` hook from Auth.js to protect routes in Client Components.
-
-**Why it's wrong:** Client-side checks can be bypassed; user sees flash of protected content before redirect; increases bundle size.
-
-**Do this instead:** Use middleware for route protection and Server Components with `auth()` for data access. Client-side session access should only be for UI personalization (e.g., showing username), not authorization.
-
-### Anti-Pattern 2: Storing Full Transcript in Session/JWT
-
-**What people do:** Include transcript segments in the session object to avoid DB queries.
-
-**Why it's wrong:** JWT has 4KB cookie size limit; transcripts can be 50-200KB; exceeds cookie size; breaks authentication.
-
-**Do this instead:** Store transcripts in Postgres; query only when needed on history page; use pagination for large result sets.
-
-### Anti-Pattern 3: Using Database Sessions on Vercel Edge
-
-**What people do:** Configure Auth.js with `session: { strategy: "database" }` for Vercel Edge Functions.
-
-**Why it's wrong:** Edge Runtime doesn't support full Node.js APIs required for most DB drivers; breaks on deployment; slower performance.
-
-**Do this instead:** Use JWT strategy (default) for Edge deployments; only use database sessions if deploying to Node.js runtime (not Edge) and need immediate session revocation.
-
-### Anti-Pattern 4: Blocking Middleware on All Routes
-
-**What people do:** Run auth middleware on every route including `_next/static`, `_next/image`, API routes, etc.
-
-**Why it's wrong:** Increases latency for static assets; wastes Edge invocations; can cause auth loops on auth endpoints.
-
-**Do this instead:** Use matcher config to exclude static assets and auth routes:
-```typescript
-export const config = {
-  matcher: ['/((?!api/auth|_next/static|_next/image|.*\\.png$).*)'],
-};
-```
-
-## Integration Points
-
-### External Services
-
-| Service | Integration Pattern | Notes |
-|---------|---------------------|-------|
-| **Google OAuth** | Auth.js GoogleProvider with `AUTH_GOOGLE_ID` and `AUTH_GOOGLE_SECRET` env vars | Callback URL: `https://yourdomain.com/api/auth/callback/google`; set in Google Cloud Console |
-| **Vercel Postgres** | `drizzle-orm/vercel-postgres` with auto-detected `POSTGRES_URL` | No explicit connection string needed; Vercel injects env var automatically |
-| **YouTube InnerTube API** | Existing pattern (unchanged) | Primary transcript source; public API (no auth) |
-| **Supadata API** | Existing pattern (unchanged) | Fallback when InnerTube blocked; requires `SUPADATA_API_KEY` |
-
-### Internal Boundaries
-
-| Boundary | Communication | Notes |
-|----------|---------------|-------|
-| **Client ↔ API Routes** | HTTP JSON via `fetch()` | Existing pattern; add optional session token in cookie |
-| **API Routes ↔ Database** | Drizzle ORM queries | Use `auth()` to get `userId`; always filter by `userId` for user-scoped data |
-| **Middleware ↔ Auth.js** | `auth()` function call | Returns session object or `null`; used for route protection |
-| **Server Components ↔ Database** | Direct Drizzle queries in Server Components | Next.js 16 App Router pattern; no API route needed for SSR data |
-
-## Database Schema Design
-
-### Auth.js Adapter Tables (Required)
-
-```typescript
-// lib/db/schema.ts
-import { pgTable, text, timestamp, integer, primaryKey } from 'drizzle-orm/pg-core';
-
-// Users table (Auth.js adapter)
-export const users = pgTable('users', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  name: text('name'),
-  email: text('email').notNull().unique(),
-  emailVerified: timestamp('emailVerified', { mode: 'date' }),
-  image: text('image'),
-});
-
-// Accounts table (OAuth data)
-export const accounts = pgTable('accounts', {
-  userId: text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  type: text('type').notNull(),
-  provider: text('provider').notNull(),
-  providerAccountId: text('providerAccountId').notNull(),
-  refresh_token: text('refresh_token'),
-  access_token: text('access_token'),
-  expires_at: integer('expires_at'),
-  token_type: text('token_type'),
-  scope: text('scope'),
-  id_token: text('id_token'),
-  session_state: text('session_state'),
-}, (account) => ({
-  compoundKey: primaryKey({ columns: [account.provider, account.providerAccountId] }),
-}));
-
-// Sessions table (optional, only if using database session strategy)
-export const sessions = pgTable('sessions', {
-  sessionToken: text('sessionToken').primaryKey(),
-  userId: text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  expires: timestamp('expires', { mode: 'date' }).notNull(),
-});
-
-// Verification tokens (optional, for magic link auth)
-export const verificationTokens = pgTable('verificationToken', {
-  identifier: text('identifier').notNull(),
-  token: text('token').notNull(),
-  expires: timestamp('expires', { mode: 'date' }).notNull(),
-}, (vt) => ({
-  compoundKey: primaryKey({ columns: [vt.identifier, vt.token] }),
-}));
-```
-
-### Custom Application Tables
-
-```typescript
-// Transcripts history table
-export const transcripts = pgTable('transcripts', {
-  id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  userId: text('userId').notNull().references(() => users.id, { onDelete: 'cascade' }),
-  videoId: text('videoId').notNull(),
-  videoTitle: text('videoTitle'),
-  languageCode: text('languageCode').notNull(),
-  segments: text('segments').notNull(), // JSON stringified TranscriptSegment[]
-  createdAt: timestamp('createdAt', { mode: 'date' }).notNull().defaultNow(),
-}, (table) => ({
-  userIdIdx: index('transcripts_userId_idx').on(table.userId),
-  createdAtIdx: index('transcripts_createdAt_idx').on(table.createdAt),
-}));
-```
-
-**Schema design notes:**
-- **Foreign keys with cascade delete:** When user deleted, all accounts/sessions/transcripts also deleted
-- **Indexes on userId and createdAt:** Optimize history queries (`WHERE userId = ? ORDER BY createdAt DESC`)
-- **JSON storage for segments:** Avoids complex relational structure; Postgres has native JSON support
-- **UUIDs for primary keys:** Compatible with Auth.js Drizzle adapter defaults
-
-## Component Build Order
-
-To minimize dependency issues, build in this order:
-
-### Phase 1: Database Foundation
-1. Install dependencies: `drizzle-orm`, `drizzle-kit`, `@vercel/postgres`, `next-auth@beta`, `@auth/drizzle-adapter`
-2. Create `lib/db/schema.ts` with Auth.js adapter tables
-3. Create `lib/db/index.ts` with Drizzle client
-4. Create `drizzle.config.ts` for migrations
-5. Generate and push migrations: `drizzle-kit generate` → `drizzle-kit push`
-
-**Why first:** All subsequent components depend on DB schema being in place.
-
-### Phase 2: Authentication Setup
-1. Configure Google OAuth in Google Cloud Console (get client ID/secret)
-2. Create `auth.ts` with NextAuth.js config (Google provider, Drizzle adapter)
-3. Create `app/api/auth/[...nextauth]/route.ts` handlers
-4. Create `middleware.ts` for route protection
-5. Add env vars: `AUTH_SECRET`, `AUTH_GOOGLE_ID`, `AUTH_GOOGLE_SECRET`, `POSTGRES_URL`
-
-**Why second:** Auth layer needed before protected routes and DB saves.
-
-### Phase 3: Transcript Persistence
-1. Extend `lib/types.ts` with DB types
-2. Update `app/api/transcript/route.ts` to save transcripts if user authenticated
-3. Test saving flow with authenticated user
-
-**Why third:** Requires auth to be working to get `userId`.
-
-### Phase 4: History Page
-1. Create `app/history/page.tsx` (Server Component)
-2. Implement Drizzle query to fetch user's transcripts
-3. Create UI components for displaying history list
-4. Add "View history" link in header/nav
-
-**Why last:** Depends on both auth and transcript persistence being functional.
+Chrome Web Store review time (typically 1-7 days for new extensions, faster for updates). Plan releases accordingly — don't expect same-day updates.
 
 ## Sources
 
 ### High Confidence (Official Documentation)
 
-- [Next.js 16 App Router Authentication Guide](https://nextjs.org/docs/app/building-your-application/authentication) - Next.js middleware and session patterns
-- [Auth.js Drizzle Adapter](https://authjs.dev/getting-started/adapters/drizzle) - Official adapter documentation
-- [Drizzle ORM with Vercel Postgres](https://orm.drizzle.team/docs/tutorials/drizzle-with-vercel) - Official integration guide
-- [Auth.js Google Provider Setup](https://authjs.dev/getting-started/providers/google) - OAuth configuration
-- [Next.js 16 Middleware (Proxy)](https://nextjs.org/docs/app/api-reference/file-conventions/middleware) - Route protection patterns
+- [Chrome MV3 Content Scripts](https://developer.chrome.com/docs/extensions/develop/concepts/content-scripts) — Content script injection patterns, run_at options, DOM access
+- [chrome.cookies API](https://developer.chrome.com/docs/extensions/reference/api/cookies) — Cookie reading permissions, host_permissions requirement
+- [chrome.scripting API](https://developer.chrome.com/docs/extensions/reference/api/scripting) — Dynamic injection patterns
+- [Chrome Extensions AI](https://developer.chrome.com/docs/extensions/ai) — Native AI APIs (Prompt API, Summarizer API) as alternative to Gemini
+- [chrome.webNavigation API](https://developer.chrome.com/docs/extensions/reference/api/webNavigation) — SPA navigation detection in background SW
+
+### High Confidence (Community with Verification)
+
+- [WXT Framework Comparison 2025](https://wxt.dev/guide/resources/compare) — WXT vs Plasmo vs CRXJS; WXT confirmed as leading maintained framework
+- [2025 State of Browser Extension Frameworks](https://redreamality.com/blog/the-2025-state-of-browser-extension-frameworks-a-comparative-analysis-of-plasmo-wxt-and-crxjs/) — Independent analysis confirming WXT as dominant choice
+- [Cookie-Based Auth for Browser Extension + Web App (MV3)](https://developer.chrome.com/docs/extensions/develop/concepts/storage-and-cookies) — Official storage and cookies patterns
 
 ### Medium Confidence (Community Examples)
 
-- [Basic Next.js + Drizzle + NextAuth Setup](https://medium.com/@shan32157/basic-next-js-drizzle-docker-next-auth-google-account-setup-b803d7a02e29)
-- [Authentication using Auth.js v5 and Drizzle](https://reetesh.in/blog/authentication-using-auth.js-v5-and-drizzle-for-next.js-app-router)
-- [Setting up Drizzle ORM with NextAuth.js in Next.js 14](https://codevoweb.com/setting-up-drizzle-orm-with-nextauth-in-nextjs-14/)
-- [GitHub: onset - Next.js 14 + Drizzle + NextAuth starter](https://github.com/nrjdalal/onset)
+- [Sharing next-auth authentication with Chrome Extension](https://github.com/nextauthjs/next-auth/discussions/6021) — Confirmed pattern: use `/api/auth/session` endpoint rather than cookie values
+- [Making Chrome Extension Smart for SPA Websites](https://medium.com/@softvar/making-chrome-extension-smart-by-supporting-spa-websites-1f76593637e8) — YouTube SPA navigation patterns using `onHistoryStateUpdated`
+- [Shadow DOM for Chrome Extensions](https://railwaymen.org/blog/chrome-extensions-shadow-dom) — CSS isolation via Shadow DOM in content scripts
+- [Gemini API Rate Limits 2026](https://www.aifreeapi.com/en/posts/gemini-api-free-tier-rate-limits) — Free tier limits after December 2025 reduction (15 RPM, 1,000 RPD)
 
 ---
-*Architecture research for: TranscriptGrab auth + database milestone*
-*Researched: 2026-02-17*
+*Architecture research for: TranscriptGrab Chrome extension + Gemini AI summaries milestone*
+*Researched: 2026-02-18*

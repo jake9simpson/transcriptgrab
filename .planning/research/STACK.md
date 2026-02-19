@@ -1,192 +1,239 @@
 # Stack Research
 
-**Domain:** YouTube transcript tool with user accounts and persistent storage
-**Researched:** 2026-02-17
+**Domain:** Chrome Extension (Manifest V3) + AI Summaries for YouTube Transcript Tool
+**Researched:** 2026-02-18
 **Confidence:** HIGH
 
-## Recommended Stack
+---
 
-### Core Technologies
+> **Note:** This file covers NEW additions for the Chrome extension + Gemini milestone only.
+> Existing stack (Next.js 16, Auth.js v5, Drizzle ORM, Neon Postgres, InnerTube + Supadata) is validated and unchanged.
+
+---
+
+## Recommended Stack — New Additions Only
+
+### Extension Build Framework
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| Auth.js (NextAuth v5) | `next-auth@beta` (v5.0.0-beta) | Google OAuth authentication | Official rewrite for App Router with universal `auth()` function, edge-compatible, production-ready beta. Renamed from NextAuth, v5 is the standard for Next.js 16. |
-| Drizzle ORM | `^0.45.1` | TypeScript ORM for database operations | Lightweight (zero runtime dependencies), better edge/serverless performance than Prisma, SQL-first approach with full type safety. Standard choice for Next.js 16 + Vercel Postgres in 2026. |
-| Vercel Postgres | `@vercel/postgres@^0.10.0` | Serverless PostgreSQL database | Native Vercel integration (now powered by Neon), zero-config setup, connection pooling via websockets for edge compatibility. Fits existing Vercel deployment. |
-| Drizzle Kit | `^0.31.5` | Database migrations and schema management | Official migration tool for Drizzle, generates SQL migrations from TypeScript schema, introspection support. |
-| @auth/drizzle-adapter | `^1.11.1` | Auth.js database adapter for Drizzle | Official adapter connecting Auth.js sessions/accounts to Drizzle ORM, supports PostgreSQL with proper type safety. |
-| Zod | `^3.24.0` | Runtime schema validation | Industry standard for TypeScript validation, seamless Next.js Server Actions integration, reusable schemas for client/server. |
+| WXT | `^0.20.17` | Chrome extension build framework | The consensus-leading framework as of 2026. Built on Vite, offers HMR for content scripts, auto-imports, TypeScript-first, Shadow Root UI helpers, React module support. Actively maintained (216 contributors, released Feb 12, 2026). Framework-agnostic — works with React 19 and Tailwind v4 via Vite plugin. |
+| `@wxt-dev/module-react` | latest | React integration for WXT | Official WXT module for React support in popup, options page, and content script UIs. Required to use React components in extension entry points. |
 
-### Supporting Libraries
+### AI / Gemini SDK
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| `@google/genai` | `^1.41.0` | Google Gemini API SDK | Google's officially maintained SDK (GA since May 2025). Replaces the legacy `@google/generative-ai` (deprecated). Supports Gemini 2.5 Flash — the current best price-performance model for summarization tasks. Supports streaming, structured outputs, and function calling. Node 18+ required. |
+
+### Supporting Libraries — Extension
 
 | Library | Version | Purpose | When to Use |
 |---------|---------|---------|-------------|
-| `@neondatabase/serverless` | `^0.10.0` | Alternative Neon driver | If migrating to direct Neon access (Vercel Postgres is Neon-backed, same infrastructure). Optional. |
-| `@types/better-sqlite3` | `^7.6.0` | TypeScript types for local dev DB | For running a local SQLite database during development instead of connecting to Vercel Postgres. |
-| `dotenv` | `^16.4.0` | Environment variable loading | Loading `.env.local` in Node.js contexts (Drizzle config, seed scripts). Next.js loads env vars automatically for app code. |
-| `pg` | `^8.13.0` | Node.js PostgreSQL client | If using serverful environment instead of edge. Not needed for edge deployments with `@vercel/postgres`. |
+| `@tailwindcss/vite` | `^4.0.0` | Tailwind CSS v4 in WXT via Vite plugin | Required for Tailwind v4 in WXT — the PostCSS path does not work with WXT. Use the Vite plugin path instead. Known limitation: minor border rendering issues inside shadow roots, which does not block functionality. |
+| `webextension-polyfill` | `^0.10.0` | Cross-browser extension API polyfill | Wraps `chrome.*` API in Promise-based `browser.*` API. WXT bundles `@wxt-dev/browser` which provides typed wrappers, but explicit polyfill needed if you want the same code to run in Firefox without changes. Optional for Chrome-only. |
 
-### Development Tools
+### Development Tools — Extension
 
 | Tool | Purpose | Notes |
 |------|---------|-------|
-| Drizzle Studio | Visual database browser | Run `npx drizzle-kit studio` to inspect tables/data visually |
-| Drizzle Kit CLI | Schema push, migrations, introspection | `npx drizzle-kit generate` for migrations, `push` for schema sync |
+| WXT DevServer | HMR for extension during development | Run `wxt dev` — automatically reloads extension on file change, including content scripts |
+| WXT CLI zip | Production zip for Chrome Web Store | Run `wxt zip` to produce a `.zip` ready for uploading to the Chrome Web Store |
+| Chrome DevTools | Inspect service worker, content scripts | Open `chrome://extensions`, click "service worker" link to inspect background script |
+
+---
+
+## Gemini Model Selection
+
+**Use: `gemini-2.5-flash`** (model ID: `gemini-2.5-flash`)
+
+- 1M token context window — handles any YouTube transcript without chunking
+- Best price-performance for high-volume text summarization (confirmed current SOTA in this category)
+- Streaming support via `generateContentStream()` for progressive UI rendering
+- `gemini-3-flash-preview` appears in docs but is preview-only; `gemini-2.5-flash` is production-stable
+
+**Do NOT use:**
+- `gemini-2.0-flash` — Deprecated as of early 2026
+- `gemini-1.5-flash` — Superseded by 2.5 Flash, kept only for backward compat
+
+---
+
+## Integration Architecture with Existing App
+
+### API Key Security Pattern
+
+The Gemini API key MUST NOT be stored in the extension. Chrome extensions ship as readable ZIP files — any hardcoded key is fully exposed. Use the existing Next.js backend as a proxy:
+
+```
+Extension → POST /api/summarize (with session cookie) → Next.js → Gemini API → response
+```
+
+This means:
+1. Add `GEMINI_API_KEY` as an environment variable to Vercel (not the extension)
+2. Add a `POST /api/summarize` route to the existing Next.js app
+3. Extension calls this route, authenticated via the existing Auth.js session cookie
+4. Server calls Gemini with the API key from `process.env`
+
+### Auth Session Detection Pattern
+
+The extension detects whether the user is logged into the web app via cookie reading. Auth.js v5 stores the session in an HttpOnly JWT cookie (default name: `authjs.session-token`). The extension background service worker can read this using the `cookies` permission:
+
+```json
+// manifest.json permissions
+"permissions": ["cookies", "storage"],
+"host_permissions": ["https://transcriptgrab.vercel.app/*"]
+```
+
+The extension background worker calls `chrome.cookies.get({ url, name })` to check for the session cookie. If found, the user is considered logged in. If not, redirect to the web app login page.
+
+**Critical caveat:** Auth.js sets cookies as `HttpOnly` by default, which means content scripts cannot read `document.cookie`. Only the background service worker (via `chrome.cookies`) can read HttpOnly cookies. This requires the `cookies` permission in the manifest.
+
+### Extension Project Location
+
+Place the extension as a subdirectory of the existing monorepo rather than a separate repo:
+
+```
+transcriptgrab/           ← existing Next.js project root
+├── app/
+├── lib/
+├── components/
+├── extension/            ← NEW: WXT project lives here
+│   ├── wxt.config.ts
+│   ├── entrypoints/
+│   │   ├── background.ts
+│   │   ├── content.ts
+│   │   └── popup/
+│   └── package.json      ← separate package.json for extension deps
+├── package.json          ← Next.js app package.json (unchanged)
+└── CLAUDE.md
+```
+
+This is the simplest structure. The extension has its own `package.json` and `node_modules`. Run WXT from the `extension/` subdirectory with `cd extension && wxt dev`. No monorepo tooling (Turborepo) needed unless shared UI components become a priority.
+
+---
 
 ## Installation
 
 ```bash
-# Core authentication and database
-npm install next-auth@beta @auth/drizzle-adapter drizzle-orm @vercel/postgres
+# From the extension/ subdirectory
+cd extension
 
-# Database tooling and validation
-npm install drizzle-kit zod
+# Initialize WXT project
+npx wxt@latest init .
 
-# Development dependencies
-npm install -D dotenv
+# React module
+npm install @wxt-dev/module-react
+
+# Gemini SDK (install in Next.js root — calls happen server-side)
+cd ..
+npm install @google/genai
+
+# Tailwind v4 in extension (Vite plugin approach)
+cd extension
+npm install tailwindcss @tailwindcss/vite
 ```
+
+---
 
 ## Alternatives Considered
 
 | Recommended | Alternative | When to Use Alternative |
 |-------------|-------------|-------------------------|
-| Auth.js v5 | Clerk | If you want managed auth with pre-built UI components and don't want to manage session logic. Trade-off: vendor lock-in, reliability concerns reported in production (Feb 2026). |
-| Auth.js v5 | Better Auth | If you need more flexibility than Auth.js or want a newer, lighter alternative. Trade-off: smaller ecosystem, less battle-tested than Auth.js. |
-| Drizzle ORM | Prisma | If your team prefers a higher-level abstraction with automated migrations and Prisma Studio. Trade-off: larger bundle size (~500KB vs ~40KB), slower edge performance, less SQL control. |
-| Vercel Postgres | Neon (direct) | If you want database branching (one DB per PR), better free tier limits, or plan to migrate off Vercel. Trade-off: Vercel Postgres IS Neon underneath (same infrastructure), so switching is minimal effort. |
-| Vercel Postgres | Supabase | If you need realtime subscriptions, file storage, or full backend-as-a-service. Trade-off: different platform (not Vercel-native), more complex setup for just auth+DB. |
-| JWT sessions (default) | Database sessions | If you need immediate session revocation (force logout on compromised accounts). Trade-off: requires DB query on every authenticated request (slower, more expensive). |
+| WXT | CRXJS (`@crxjs/vite-plugin`) | Only if you need absolute minimal abstraction and are willing to accept maintenance uncertainty. CRXJS released 2.3.0 in Dec 2025 after a long gap, but long-term commitment is unclear. |
+| WXT | Plasmo | Never for new projects in 2026. Plasmo has stalled — poor MV3 support, inactive GitHub issues, no active releases. Community consensus is to avoid it. |
+| WXT | Webpack boilerplate (manual) | Only if your team already has deep Webpack expertise and zero tolerance for framework opinions. Manual setup adds weeks with no DX benefit. |
+| `@google/genai` | `@ai-sdk/google` (Vercel AI SDK) | If you already use Vercel AI SDK in the Next.js app for streaming responses. The AI SDK's `streamText()` with Google provider is a clean integration. Either works — `@google/genai` is more direct with fewer abstractions. |
+| `@google/genai` | `@google/generative-ai` | Never — this package is the legacy SDK. Google explicitly marks it deprecated in favor of `@google/genai`. |
+| Backend proxy for Gemini | Calling Gemini from extension directly | Never — API keys cannot be safely stored in a browser extension. Any key embedded in extension code is publicly readable by inspecting the extension ZIP. |
+
+---
 
 ## What NOT to Use
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| Lucia Auth | Deprecated March 2025, no longer maintained | Auth.js v5 or Better Auth |
-| NextAuth v4 | Old architecture, not designed for App Router | Auth.js v5 (NextAuth v5 beta) |
-| `middleware.ts` for Auth.js | Renamed to `proxy.ts` in Next.js 16 | `proxy.ts` with `export { auth as proxy }` |
-| Direct Prisma with edge runtime | Large bundle size causes cold start issues on edge | Drizzle ORM (designed for edge/serverless) |
-| Database sessions (default) | Adds latency and cost to every request | JWT sessions unless you need instant revocation |
-| `@next-auth/*-adapter` scope | Deprecated, adapters moved to `@auth/*` scope | `@auth/drizzle-adapter` |
+| `@google/generative-ai` | Legacy/deprecated SDK, no longer actively maintained | `@google/genai` (v1.41.0+) |
+| `gemini-2.0-flash` | Deprecated in 2026 | `gemini-2.5-flash` |
+| Manifest V2 | Chrome has sunset MV2 enforcement and will remove support | Manifest V3 only |
+| Storing Gemini API key in extension | Extension source is readable; key would be fully exposed | Proxy all Gemini calls through Next.js API route |
+| PostCSS for Tailwind v4 in WXT | Does not work — WXT's Vite pipeline conflicts with Tailwind v4 PostCSS plugin | Use `@tailwindcss/vite` Vite plugin instead |
+| `document.cookie` for session detection | Auth.js HttpOnly cookies are not accessible to content scripts | Use background service worker with `chrome.cookies` API |
+| Plasmo | Abandoned by maintainers, broken MV3 support | WXT |
 
-## Stack Patterns by Variant
+---
 
-**If using edge runtime (recommended for Vercel):**
-- Use `@vercel/postgres` with websocket connection
-- Use Drizzle ORM (not Prisma)
-- Use JWT sessions (not database sessions)
-- Because edge has no TCP, needs small bundles, and benefits from stateless auth
+## MV3 Key Constraints
 
-**If using Node.js runtime (serverful):**
-- Can use `pg` or `postgres` driver directly
-- Database sessions become viable (lower latency)
-- More adapter options available
-- Because TCP connections available, slower cold starts acceptable
+These Manifest V3 constraints directly affect architecture decisions:
 
-**If using local development:**
-- Option 1: Connect to Vercel Postgres preview database
-- Option 2: Run local PostgreSQL with Docker
-- Option 3: Use SQLite with Drizzle for local dev (same schema, different driver)
-- Because local PostgreSQL requires Docker setup, SQLite is fastest for iteration
+| Constraint | Impact | Solution |
+|------------|--------|---------|
+| Service worker replaces background page | Worker terminates when idle (30s timeout). Cannot hold persistent state in memory. | Use `chrome.storage.local` for any state the service worker needs to persist |
+| No remote code execution | Cannot load scripts from CDN at runtime | All code must be bundled at build time |
+| Fetch in service worker only | Content scripts cannot use `chrome.cookies` API directly | Message passing from content script → background service worker → API calls |
+| `externally_connectable` for web app | Extension and web app can communicate via `chrome.runtime.sendMessage` only if declared | Declare `externally_connectable.matches` with the web app domain in manifest |
+
+---
+
+## Message Passing Pattern (Extension ↔ Web App)
+
+```typescript
+// manifest.json
+{
+  "externally_connectable": {
+    "matches": ["https://transcriptgrab.vercel.app/*"]
+  }
+}
+```
+
+This lets the TranscriptGrab web app trigger the extension from its own pages (e.g., "Open in Extension" button) and lets the extension communicate with the web app's domain. Without this, communication is one-way only (extension to external URLs via fetch).
+
+---
 
 ## Version Compatibility
 
 | Package A | Compatible With | Notes |
 |-----------|-----------------|-------|
-| `next-auth@beta` (v5) | Next.js 14.0+ | Minimum Next.js 14.0, fully compatible with Next.js 16 |
-| `drizzle-orm@^0.45.1` | `@vercel/postgres@^0.10.0` | Use `drizzle-orm/vercel-postgres` import |
-| `drizzle-orm@^0.45.1` | `drizzle-kit@^0.31.5` | Keep drizzle-kit version aligned with drizzle-orm minor version |
-| `@auth/drizzle-adapter@^1.11.1` | `next-auth@beta` (v5) | Official adapter, updated for Auth.js v5 |
-| `@auth/drizzle-adapter@^1.11.1` | `drizzle-orm@^0.45.1` | Requires Drizzle schema definitions for users, accounts, sessions tables |
+| WXT `^0.20.17` | React 19 | React 19 supported via `@wxt-dev/module-react` |
+| WXT `^0.20.17` | Tailwind v4 via `@tailwindcss/vite` | PostCSS path broken; Vite plugin path works with minor shadow root CSS caveats |
+| `@google/genai` `^1.41.0` | Node.js 18+ | Cannot run in browser context directly (use via Next.js API route) |
+| `@google/genai` `^1.41.0` | Next.js 16 App Router | Works in route handlers and server actions |
+| Auth.js v5 session cookies | `chrome.cookies` API (background SW only) | Requires `cookies` permission + `host_permissions` for the web app domain |
 
-## Architecture Notes
+---
 
-### Authentication Flow
-1. User clicks "Sign in with Google"
-2. Auth.js redirects to Google OAuth consent screen
-3. Google redirects back to `/api/auth/callback/google`
-4. Auth.js creates/updates user in database via Drizzle adapter
-5. JWT session token stored in HttpOnly cookie
-6. Subsequent requests use `auth()` to read session from JWT
-
-### Database Session Flow (if using database strategy)
-1. Same OAuth flow (steps 1-4 above)
-2. Auth.js creates session record in database
-3. Session ID stored in HttpOnly cookie (not full user data)
-4. Each request queries database to load session + user data
-5. Sign out deletes session from database
-
-### Connection Pooling
-- `@vercel/postgres` automatically pools connections via websocket
-- No manual pool management needed for edge runtime
-- For serverful runtime, use `createPool()` from `@vercel/postgres` or `pg`
-- Set idle timeout ~5 seconds for serverless (fast cleanup, reuse during traffic spikes)
-
-## Database Schema Requirements
-
-### Auth.js Required Tables (via Drizzle adapter)
-```typescript
-// Required tables for @auth/drizzle-adapter
-- users (id, name, email, emailVerified, image)
-- accounts (userId, type, provider, providerAccountId, ...)
-- sessions (sessionToken, userId, expires) // Only if using database sessions
-- verificationTokens (identifier, token, expires) // Only if using email verification
-```
-
-### Application Tables
-```typescript
-// TranscriptGrab-specific tables
-- transcripts (id, userId, videoId, title, transcript, format, createdAt)
-- user_preferences (userId, defaultFormat, autoSave, theme)
-```
-
-## Environment Variables Required
+## Environment Variables — New Additions
 
 ```bash
-# Auth.js
-AUTH_SECRET=<generate with: npx auth secret>
-AUTH_GOOGLE_ID=<from Google Cloud Console>
-AUTH_GOOGLE_SECRET=<from Google Cloud Console>
+# Add to Vercel environment variables (NOT to extension)
+GEMINI_API_KEY=<from Google AI Studio>
 
-# Vercel Postgres (auto-injected by Vercel, set manually for local dev)
-POSTGRES_URL=<connection string>
-POSTGRES_PRISMA_URL=<connection pooling URL>
-POSTGRES_URL_NON_POOLING=<direct connection URL>
-
-# Next.js (production URL for OAuth callbacks)
-NEXTAUTH_URL=https://transcriptgrab.vercel.app
+# Already exists — no change needed for extension auth detection
+# Auth.js session cookie is at transcriptgrab.vercel.app (existing domain)
 ```
 
-## Migration Strategy
-
-1. **Setup Auth.js**: Install packages, configure Google OAuth provider
-2. **Setup Database**: Create Vercel Postgres instance, add env vars
-3. **Define Schema**: Create Drizzle schema with Auth.js tables + transcript tables
-4. **Generate Migrations**: Run `drizzle-kit generate` to create SQL migrations
-5. **Push Schema**: Run `drizzle-kit push` or apply migrations via `drizzle-kit migrate`
-6. **Test Locally**: Use `.env.local` to connect to Vercel Postgres preview database
-7. **Deploy**: Push to Vercel, env vars already configured in production
+---
 
 ## Sources
 
-### High Confidence (Context7 + Official Docs)
-- [Auth.js Next.js Documentation](https://authjs.dev/reference/nextjs) — Configuration patterns (Context7)
-- [Drizzle ORM Vercel Tutorial](https://orm.drizzle.team/docs/tutorials/drizzle-with-vercel) — Setup guide (Context7)
-- [@auth/drizzle-adapter Reference](https://authjs.dev/reference/adapter/drizzle) — Adapter configuration (Context7)
-- [Vercel Postgres Package](https://github.com/vercel/storage/blob/main/packages/postgres/README.md) — Connection setup (Context7)
-- [drizzle-orm npm package](https://www.npmjs.com/package/drizzle-orm) — Version 0.45.1 confirmed
+### High Confidence (Official Docs Verified)
+- [WXT Official Documentation](https://wxt.dev/) — Framework overview, content script UI, Shadow Root pattern
+- [WXT Content Scripts Guide](https://wxt.dev/guide/essentials/content-scripts.html) — UI injection methods (Integrated, Shadow Root, IFrame)
+- [WXT GitHub Releases](https://github.com/wxt-dev/wxt/releases) — v0.20.17 latest stable, Feb 12, 2026
+- [Google Gemini API Libraries](https://ai.google.dev/gemini-api/docs/libraries) — `@google/genai` confirmed GA, replaces legacy SDK
+- [Google Gemini API Quickstart](https://ai.google.dev/gemini-api/docs/quickstart) — `@google/genai` usage pattern
+- [Chrome `externally_connectable`](https://developer.chrome.com/extensions/manifest/externally_connectable) — Web app ↔ extension communication
 
-### Medium Confidence (Official Sources + Multiple Web Sources)
-- [Auth.js Migration to v5](https://authjs.dev/getting-started/migrating-to-v5) — Next.js 16 proxy.ts change
-- [Auth.js Session Strategies](https://authjs.dev/concepts/session-strategies) — JWT vs database sessions
-- [Vercel Pricing](https://vercel.com/pricing) — Free tier limitations
-- [Vercel Postgres Transition Guide](https://neon.com/docs/guides/vercel-postgres-transition-guide) — Neon backing
+### Medium Confidence (Web Search + Multiple Sources Agree)
+- [@google/genai npm](https://www.npmjs.com/package/@google/genai) — v1.41.0 latest, published Feb 2026
+- [2025 State of Browser Extension Frameworks](https://redreamality.com/blog/the-2025-state-of-browser-extension-frameworks-a-comparative-analysis-of-plasmo-wxt-and-crxjs/) — WXT recommended over Plasmo and CRXJS
+- [WXT + Tailwind v4 GitHub Issue #1460](https://github.com/wxt-dev/wxt/issues/1460) — Closed: Vite plugin path works, PostCSS path does not
+- [NextAuth Chrome extension discussion](https://github.com/nextauthjs/next-auth/discussions/6021) — Session cookie reading patterns, `sameSite` requirements
+- [Gemini 2.5 Flash on OpenRouter](https://openrouter.ai/google/gemini-2.5-flash) — 1M token context window confirmed
 
-### Comparisons (Web Search Verified)
-- [Prisma vs Drizzle 2026](https://designrevision.com/blog/prisma-vs-drizzle) — ORM comparison
-- [Neon vs Supabase 2026](https://designrevision.com/blog/supabase-vs-neon) — Database alternatives
-- [Next.js Auth Alternatives 2026](https://clerk.com/articles/complete-authentication-guide-for-nextjs-app-router) — Clerk, Better Auth, Lucia status
-- [Drizzle ORM Latest Releases](https://orm.drizzle.team/docs/latest-releases) — Version information
+### Low Confidence (Single Source, Not Independently Verified)
+- Gemini model naming: "gemini-3-flash-preview" appearing in docs quickstart — may be a preview alias; use `gemini-2.5-flash` for production until stable GA model confirmed
 
 ---
-*Stack research for: TranscriptGrab auth and database milestone*
-*Researched: 2026-02-17*
+*Stack research for: TranscriptGrab Chrome Extension + Gemini AI Summaries milestone*
+*Researched: 2026-02-18*

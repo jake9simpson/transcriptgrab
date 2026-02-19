@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A YouTube transcript extractor with persistent user history. Users paste a video URL and get the transcript in multiple formats. Signed-in users get automatic transcript saving with a searchable history library, format switching, bulk management, and duplicate detection. Deployed on Vercel with Neon Postgres and Google OAuth.
+A YouTube transcript extractor with persistent user history and a Chrome extension. Users paste a video URL on the web app or click a button directly on YouTube to get transcripts in multiple formats, plus AI-powered summaries via Gemini. Signed-in users get automatic transcript saving with a searchable history library. Deployed on Vercel with Neon Postgres and Google OAuth.
 
 ## Core Value
 
@@ -45,7 +45,17 @@ Users can always find their previous transcripts without regenerating them.
 
 ### Active
 
-(None yet — define in next milestone)
+<!-- v2.0 Chrome Extension + AI Summaries -->
+
+- [ ] Chrome extension with transcript button injected near YouTube player controls
+- [ ] Transcript panel inserted above description area on YouTube pages
+- [ ] All transcript formats available in extension (plain text, timestamps, SRT)
+- [ ] Copy-to-clipboard from extension panel
+- [ ] AI-powered video summaries via Gemini (bullet points and paragraph, toggleable)
+- [ ] Auth detection from transcriptgrab.com session (no separate sign-in flow)
+- [ ] Auto-save transcripts to history when signed in
+- [ ] Extension works without sign-in (transcript only, no persistence)
+- [ ] Language selection for available captions
 
 ### Out of Scope
 
@@ -54,13 +64,15 @@ Users can always find their previous transcripts without regenerating them.
 - Mobile app — web-first approach
 - Transcript editing — read-only is fine, editing creates source drift
 - Team/organization features — single-user tool
-- Browser extension — major effort, separate distribution channel
+- Browser extension for Firefox/Safari — Chrome-first, other browsers deferred
 
 ## Context
 
 Shipped v1.0 with 3,717 LOC TypeScript across 7 phases (13 plans) in 1 day.
 Tech stack: Next.js 16 App Router, TypeScript, Tailwind v4, shadcn/ui, Auth.js v5 (Google OAuth, JWT), Drizzle ORM, Neon Postgres.
 All 23 v1 requirements satisfied per milestone audit.
+
+v2.0 adds a Chrome extension that brings transcript extraction directly into YouTube. AI summaries powered by Gemini API. Extension detects existing web app auth session for transcript persistence.
 
 ## Constraints
 
@@ -69,6 +81,18 @@ All 23 v1 requirements satisfied per milestone audit.
 - **Auth**: Auth.js v5 with Google OAuth, JWT strategy (no DB sessions)
 - **Access**: Tool remains usable without sign-in; auth adds persistence only
 - **Stack**: Next.js 16 App Router, TypeScript, Tailwind v4, shadcn/ui
+
+## Current Milestone: v2.0 Chrome Extension + AI Summaries
+
+**Goal:** Bring transcript extraction and AI-powered summaries directly into YouTube via a Chrome extension, with seamless auth and history integration with the existing web app.
+
+**Target features:**
+- Chrome extension with discrete button on YouTube player
+- Transcript panel injected above YouTube description area
+- AI summaries via Gemini (bullet points + paragraph toggle)
+- Auth detection from web app session
+- Auto-save to existing history system
+- All format options (plain, timestamps, SRT)
 
 ## Key Decisions
 
@@ -84,6 +108,10 @@ All 23 v1 requirements satisfied per milestone audit.
 | Drizzle ORM with DrizzleAdapter | Type-safe queries, Auth.js integration | ✓ Good |
 | onConflictDoNothing for duplicates | Silent skip preserves original save date | ✓ Good |
 | Fail-open duplicate check endpoint | Returns non-error for unauthenticated users | ✓ Good |
+| Gemini for AI summaries | User preference, free tier available | — Pending |
+| Chrome extension (not Firefox/Safari) | Largest browser market share, simplest first | — Pending |
+| Session detection from web app (not extension OAuth) | Avoids duplicate auth flow, simpler UX | — Pending |
+| Extension-only AI summaries (not web app) | Keep web app focused, test feature in extension first | — Pending |
 
 ---
-*Last updated: 2026-02-18 after v1.0 milestone*
+*Last updated: 2026-02-18 after v2.0 milestone start*
